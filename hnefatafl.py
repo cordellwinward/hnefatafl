@@ -6,21 +6,38 @@ class Piece:
         self.type = type
         self.is_captured = is_captured
 
+        #assigns text characters to pieces
+        if self.team == "offense":
+            self.character = "A"
+        elif self.team == "defense" and self.type == "standard":
+            self.character = "D"
+        elif self.team == "defense" and self.type == "king":
+            self.character = "K"
+
+    def __str__(self):
+        return self.character
+
+
+
 class Board:
     def __init__(self):
+        #Maps the peices on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
         self.init_board_state = [
             [".", ".", ".", "A", "A", "A", "A", "A", ".", ".", "."],
             [".", ".", ".", ".", ".", "A", ".", ".", ".", ".", "."],
             [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
             ["A", ".", ".", ".", ".", "D", ".", ".", ".", ".", "A"],
             ["A", ".", ".", ".", "D", "D", "D", ".", ".", ".", "A"],
-            ["A", "A", ".", "D", "D", "C", "D", "D", ".", "A", "A"],
+            ["A", "A", ".", "D", "D", "K", "D", "D", ".", "A", "A"],
             ["A", ".", ".", ".", "D", "D", "D", ".", ".", ".", "A"],
             ["A", ".", ".", ".", ".", "D", ".", ".", ".", ".", "A"],
             [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
             [".", ".", ".", ".", ".", "A", ".", ".", ".", ".", "."],
             [".", ".", ".", "A", "A", "A", "A", "A", ".", ".", "."]
         ]
+        
+
+        # Initializes piece classes into a 2D array as they appear on the board in the initial board position
         self.board_state  = []
         for row in self.init_board_state:
             row_items = []
@@ -31,13 +48,22 @@ class Board:
                     row_items.append(Piece("offense", "standard"))
                 elif square == "D":
                     row_items.append(Piece("defense", "standard"))
-                elif square == "C":
+                elif square == "K":
                     row_items.append(Piece("defense", "king"))
-                self.board_state.append(row_items)
-                
+            self.board_state.append(row_items)
+    def print_board_state(self):
+        # Prints the Board into terminal for development
+        for row in self.board_state:
+            for square in row:
+                if square == None:
+                    print(".", end=" ")
+                else:
+                    print(square, end=" ")
+            print()
+
 
 
 
 
 board = Board()
-print(board.board_state)
+board.print_board_state()
