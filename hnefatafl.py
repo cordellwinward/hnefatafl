@@ -1,11 +1,23 @@
 
 
 class Piece:
-    def __init__(self, team, type, is_captured=False):
+    VALID_TEAMS = ["offense", "defense"]
+    VALID_TYPES = ["standard", "king"]
+
+    def __init__(self, team, type="standard", is_captured=False):
         self.team = team
         self.type = type
         self.is_captured = is_captured
 
+        # prevents invalid pieces
+        if team not in self.VALID_TEAMS:
+            raise ValueError(f"Invalid team '{team}'. Expected one of {self.VALID_TEAMS}")
+        if type not in self.VALID_TYPES:
+            raise ValueError(f"Invalid piece type '{type}'. Expected one of {self.VALID_TYPES}")
+        if team == "offense" and type == "king":
+            raise ValueError("Offense team cannot have a King piece.")
+
+        
         #assigns text characters to pieces
         if self.team == "offense":
             self.character = "A"
@@ -20,6 +32,8 @@ class Piece:
 
 
 class Board:
+    VALID_COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"]
+    VALID_ROWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     def __init__(self):
         self.turn = "offense"
         #Maps the peices on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
@@ -62,12 +76,23 @@ class Board:
                     board = f"{board} ."
                 else:
                     board = f"{board} {square}"
-            # board = f"{board}\n"
             board = f"{board}  {row_counter}\n"
             row_counter += 1
         return board
-    def translate_text_into_coorinate():
-        pass
+    def translate_text_into_coorinate(self, coordinate_str):
+        if len(coordinate_str) < 2:
+            raise ValueError("Not a valid board square")
+        column = coordinate_str.lower()[0]
+        try:
+            row = int(coordinate_str.lower()[1:])
+        except ValueError as error:
+            raise ValueError("Not a valid board square")
+        if (column not in self.VALID_COLUMNS) or (row not in self.VALID_ROWS):
+            raise ValueError("Not a valid board square")
+        row -= 1
+        column = self.VALID_COLUMNS.index(column)
+        return (row, column)
+        
     def translate_coorinate_into_text():
         pass
     def select_board_square(self):
