@@ -21,6 +21,7 @@ class Piece:
 
 class Board:
     def __init__(self):
+        self.turn = "offense"
         #Maps the peices on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
         self.init_board_state = [
             [".", ".", ".", "A", "A", "A", "A", "A", ".", ".", "."],
@@ -51,18 +52,34 @@ class Board:
                 elif square == "K":
                     row_items.append(Piece("defense", "king"))
             self.board_state.append(row_items)
-    def print_board_state(self):
-        # Prints the Board into terminal for development
+    def __str__(self):
+        # Turns the board into a text string that can be printed for easy development
+        board = " A B C D E F G H I J K\n"
+        row_counter = 1
         for row in self.board_state:
             for square in row:
-                if square == None:
-                    print(".", end=" ")
+                if square is None:
+                    board = f"{board} ."
                 else:
-                    print(square, end=" ")
-            print()
+                    board = f"{board} {square}"
+            # board = f"{board}\n"
+            board = f"{board}  {row_counter}\n"
+            row_counter += 1
+        return board
+    def translate_text_into_coorinate():
+        pass
+    def translate_coorinate_into_text():
+        pass
+    def select_board_square(self):
+        pass
+    def move_piece(self):
+        pass
+    def check_for_capture():
+        pass
 
 
 if __name__ == "__main__":
 
     board = Board()
-    board.print_board_state()
+    # text_board = board.print_board_state()
+    print(board)
