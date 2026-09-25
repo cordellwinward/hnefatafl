@@ -11,6 +11,7 @@ All pieces move orthogonally across unobstructed paths, capturing opposing piece
 
 ## Tech Stack
 * **Core Language:** Python 3
+* **Testing** Pytest
 * **Graphical Interface (Planned):** Pygame
 * **Future Stack:** SQL, HTML, CSS, JavaScript (for planned web version)
 
@@ -44,3 +45,9 @@ No external libraries are required at this stage in development. Run the script 
 
 ```bash
 python hnefatafl.py
+```
+
+### How to Run Tests
+
+```bash
+pytest -v

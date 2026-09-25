@@ -34,6 +34,7 @@ class Piece:
 class Board:
     VALID_COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"]
     VALID_ROWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    
     def __init__(self):
         self.turn = "offense"
         #Maps the peices on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
@@ -66,6 +67,7 @@ class Board:
                 elif square == "K":
                     row_items.append(Piece("defense", "king"))
             self.board_state.append(row_items)
+
     def __str__(self):
         # Turns the board into a text string that can be printed for easy development
         board = " A B C D E F G H I J K\n"
@@ -79,6 +81,7 @@ class Board:
             board = f"{board}  {row_counter}\n"
             row_counter += 1
         return board
+    
     def translate_text_into_coordinate(self, coordinate_str):
         if len(coordinate_str) < 2:
             raise ValueError("Not a valid board square")
