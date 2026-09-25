@@ -95,4 +95,21 @@ def test_translate_text_into_coorinate():
         board.translate_text_into_coorinate("AB")
         board.translate_text_into_coorinate("A1C")
 
+def test_translate_coorinate_into_text():
+    board = Board()
+    assert board.translate_coorinate_into_text((3, 0)) == "A4"
+    assert board.translate_coorinate_into_text((10, 10)) == "K11"
+    assert board.translate_coorinate_into_text((4, 7)) == "H5"
+
+    with pytest.raises(ValueError):
+        board.translate_coorinate_into_text((-1, 0))
+    with pytest.raises(ValueError):
+        board.translate_coorinate_into_text((0, -1))
+    with pytest.raises(ValueError):
+        board.translate_coorinate_into_text((11, 0))
+    with pytest.raises(ValueError):
+        board.translate_coorinate_into_text((0, 11))
+
+
+
 pytest.main(["-v", "--tb=line", "-rN", __file__])

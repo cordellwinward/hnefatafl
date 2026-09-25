@@ -93,8 +93,16 @@ class Board:
         column = self.VALID_COLUMNS.index(column)
         return (row, column)
         
-    def translate_coorinate_into_text():
-        pass
+    def translate_coorinate_into_text(self, coordinate):
+        row, column = coordinate
+        if (not 0 <= row <= 10) or (not 0 <= column <=10):
+            raise ValueError("Invalid input")
+        row = row + 1
+        column = self.VALID_COLUMNS[column]
+
+        return f"{column}{row}".upper()
+
+    
     def select_board_square(self):
         pass
     def move_piece(self):
