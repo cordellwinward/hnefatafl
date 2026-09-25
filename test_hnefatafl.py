@@ -80,35 +80,37 @@ def test_board_str():
     )
     assert str(board) == expected_output
 
-def test_translate_text_into_coorinate():
+def test_translate_text_into_coordinate():
     board = Board()
-    assert board.translate_text_into_coorinate("A4") == (3, 0)
-    assert board.translate_text_into_coorinate("K11") == (10, 10)
-    assert board.translate_text_into_coorinate("h5") == (4, 7)
+    assert board.translate_text_into_coordinate("A4") == (3, 0)
+    assert board.translate_text_into_coordinate("K11") == (10, 10)
+    assert board.translate_text_into_coordinate("h5") == (4, 7)
 
     with pytest.raises(ValueError):
-        board.translate_text_into_coorinate ("L10")
+        board.translate_text_into_coordinate ("L10")
     with pytest.raises(ValueError):
-        board.translate_text_into_coorinate("A13")
+        board.translate_text_into_coordinate("A13")
     with pytest.raises(ValueError):
-        board.translate_text_into_coorinate("A")
-        board.translate_text_into_coorinate("AB")
-        board.translate_text_into_coorinate("A1C")
+        board.translate_text_into_coordinate("A")
+    with pytest.raises(ValueError):
+        board.translate_text_into_coordinate("AB")
+    with pytest.raises(ValueError):
+        board.translate_text_into_coordinate("A1C")
 
-def test_translate_coorinate_into_text():
+def test_translate_coordinate_into_text():
     board = Board()
-    assert board.translate_coorinate_into_text((3, 0)) == "A4"
-    assert board.translate_coorinate_into_text((10, 10)) == "K11"
-    assert board.translate_coorinate_into_text((4, 7)) == "H5"
+    assert board.translate_coordinate_into_text((3, 0)) == "A4"
+    assert board.translate_coordinate_into_text((10, 10)) == "K11"
+    assert board.translate_coordinate_into_text((4, 7)) == "H5"
 
     with pytest.raises(ValueError):
-        board.translate_coorinate_into_text((-1, 0))
+        board.translate_coordinate_into_text((-1, 0))
     with pytest.raises(ValueError):
-        board.translate_coorinate_into_text((0, -1))
+        board.translate_coordinate_into_text((0, -1))
     with pytest.raises(ValueError):
-        board.translate_coorinate_into_text((11, 0))
+        board.translate_coordinate_into_text((11, 0))
     with pytest.raises(ValueError):
-        board.translate_coorinate_into_text((0, 11))
+        board.translate_coordinate_into_text((0, 11))
 
 
 

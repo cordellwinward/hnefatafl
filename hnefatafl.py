@@ -79,7 +79,7 @@ class Board:
             board = f"{board}  {row_counter}\n"
             row_counter += 1
         return board
-    def translate_text_into_coorinate(self, coordinate_str):
+    def translate_text_into_coordinate(self, coordinate_str):
         if len(coordinate_str) < 2:
             raise ValueError("Not a valid board square")
         column = coordinate_str.lower()[0]
@@ -93,7 +93,7 @@ class Board:
         column = self.VALID_COLUMNS.index(column)
         return (row, column)
         
-    def translate_coorinate_into_text(self, coordinate):
+    def translate_coordinate_into_text(self, coordinate):
         row, column = coordinate
         if (not 0 <= row <= 10) or (not 0 <= column <=10):
             raise ValueError("Invalid input")
