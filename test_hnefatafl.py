@@ -112,6 +112,18 @@ def test_translate_coordinate_into_text():
     with pytest.raises(ValueError):
         board.translate_coordinate_into_text((0, 11))
 
+def test_select_board_square():
+    board = Board()
+    assert board.select_board_square((0, 3)) == [(0, 2), (0, 1), (0, 0), (1, 3), (2, 3), (3, 3), (4, 3)]
+    assert board.select_board_square((3, 0)) == [(3, 1), (3, 2), (3, 3), (3, 4), (2, 0), (1, 0), (0, 0)]
+    assert board.select_board_square((5, 0)) == []
+    assert board.select_board_square((2, 2)) is None
+
+    board.turn = "defense"
+    assert board.select_board_square((5, 3)) == [(5, 2), (4, 3), (3, 3), (2, 3), (1, 3), (6, 3), (7, 3), (8, 3), (9, 3)]
+    assert board.select_board_square((5, 5)) == []
+    assert board.select_board_square((0, 3)) is None
+
 
 
 pytest.main(["-v", "--tb=line", "-rN", __file__])

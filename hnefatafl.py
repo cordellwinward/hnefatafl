@@ -34,6 +34,9 @@ class Piece:
 class Board:
     VALID_COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"]
     VALID_ROWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    BOARD_SQUARE_ROW_INX = 0
+    BOARD_SQUARE_COLUMN_INX = 1
+    
     
     def __init__(self):
         self.turn = "offense"
@@ -67,6 +70,7 @@ class Board:
                 elif square == "K":
                     row_items.append(Piece("defense", "king"))
             self.board_state.append(row_items)
+        self.board_state_history = self.board_state
 
     def __str__(self):
         # Turns the board into a text string that can be printed for easy development
@@ -106,8 +110,31 @@ class Board:
         return f"{column}{row}".upper()
 
     
-    def select_board_square(self):
-        pass
+    def select_board_square(self, coordinate: tuple[int, int]) -> list[tuple[int, int]] | None:
+        board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
+        if board_square == None or board_square.team != self.turn:
+            return None
+        movement_directions =[
+            (0, -1),
+            (0, 1),
+            (-1, 0),
+            (1, 0)
+            ]
+        
+        valid_moves = []
+        for direction in movement_directions:
+            row, column = direction
+            square_around = (coordinate[self.BOARD_SQUARE_ROW_INX] + row, coordinate[self.BOARD_SQUARE_COLUMN_INX] + column)
+
+            while (square_around[self.BOARD_SQUARE_ROW_INX] >= 0 and square_around[self.BOARD_SQUARE_ROW_INX] <= 10) and (square_around[self.BOARD_SQUARE_COLUMN_INX] >= 0 and square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10) and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] == None):
+                valid_moves.append(square_around)
+                square_around = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
+        
+        return valid_moves
+        
+
+
+
     def move_piece(self):
         pass
     def check_for_capture():
@@ -117,5 +144,6 @@ class Board:
 if __name__ == "__main__":
 
     board = Board()
+    print(board.select_board_square((9, 5), "offense"))
     # text_board = board.print_board_state()
     print(board)
