@@ -1,13 +1,12 @@
-
+import copy
 
 class Piece:
     VALID_TEAMS = ["offense", "defense"]
     VALID_TYPES = ["standard", "king"]
 
-    def __init__(self, team, type="standard", is_captured=False):
+    def __init__(self, team, type="standard"):
         self.team = team
         self.type = type
-        self.is_captured = is_captured
 
         # prevents invalid pieces
         if team not in self.VALID_TEAMS:
@@ -70,7 +69,7 @@ class Board:
                 elif square == "K":
                     row_items.append(Piece("defense", "king"))
             self.board_state.append(row_items)
-        self.board_state_history = self.board_state
+        self.board_state_history = [copy.deepcopy(self.board_state)]
 
     def __str__(self):
         # Turns the board into a text string that can be printed for easy development
@@ -87,11 +86,11 @@ class Board:
         return board
     
     def translate_text_into_coordinate(self, coordinate_str):
-        if len(coordinate_str) < 2:
+        if len(coordinate_str.strip()) < 2:
             raise ValueError("Not a valid board square")
         column = coordinate_str.lower()[0]
         try:
-            row = int(coordinate_str.lower()[1:])
+            row = int(coordinate_str.lower().strip()[1:])
         except ValueError as error:
             raise ValueError("Not a valid board square")
         if (column not in self.VALID_COLUMNS) or (row not in self.VALID_ROWS):
@@ -135,8 +134,20 @@ class Board:
 
 
 
-    def move_piece(self):
-        pass
+    def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]):
+        piece = self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]]
+        self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
+        self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
+        self.board_state_history.append(copy.deepcopy(self.board_state))
+
+        #Change turns
+        if self.turn == "offense":
+            self.turn = "defense"
+        elif self.turn == "defense":
+            self.turn = "offense"
+
+
+
     def check_for_capture():
         pass
 
@@ -144,6 +155,25 @@ class Board:
 if __name__ == "__main__":
 
     board = Board()
-    print(board.select_board_square((9, 5), "offense"))
-    # text_board = board.print_board_state()
     print(board)
+    game_over = False
+    while game_over != True:
+        is_valid_move = False
+        while is_valid_move == False:
+            valid_moves = None
+            while valid_moves == None or valid_moves == []:
+                move_from = input("Where would you like to move from? ")
+                coordinate_from = board.translate_text_into_coordinate(move_from)
+                valid_moves = board.select_board_square(coordinate_from)
+                if valid_moves == None:
+                    print("You have no pieces on this tile.")
+                elif valid_moves == []:
+                    print("This piece has no possible moves")
+            move_to = input("Where would you like to move to? ")
+            coordinate_to = board.translate_text_into_coordinate(move_to)
+            if coordinate_to in valid_moves:
+                board.move_piece(coordinate_from, coordinate_to)
+                is_valid_move = True
+                print(board)
+            else:
+                print("That move is invalid. Please make a valid move")

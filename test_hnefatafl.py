@@ -4,18 +4,15 @@ from hnefatafl import Board, Piece
 
 def test_piece_init():
     offense = Piece("offense", "standard")
-    assert offense.is_captured == False
     assert offense.type == "standard"
     assert offense.team == "offense"
     assert offense.character == "A"
 
     defense = Piece("defense")
-    assert defense.is_captured == False
     assert defense.type == "standard"
     assert defense.team == "defense"
     assert defense.character == "D"
     king = Piece("defense", type="king")
-    assert king.is_captured == False
     assert king.type == "king"
     assert king.team == "defense"
     assert king.character == "K"
@@ -123,6 +120,28 @@ def test_select_board_square():
     assert board.select_board_square((5, 3)) == [(5, 2), (4, 3), (3, 3), (2, 3), (1, 3), (6, 3), (7, 3), (8, 3), (9, 3)]
     assert board.select_board_square((5, 5)) == []
     assert board.select_board_square((0, 3)) is None
+
+def test_move_piece():
+
+    board = Board()
+    board.move_piece((0, 3), (0, 1))
+    assert board.board_state[0][3] is None
+    assert board.board_state[0][1].team == "offense"
+    assert board.turn == "defense"
+    assert len(board.board_state) == 11
+    assert len(board.board_state[0]) == 11
+    assert len(board.board_state_history) == 2
+
+    board.move_piece((5, 3), (2, 3))
+    assert board.board_state[5][3] is None
+    assert board.board_state[2][3].team == "defense"
+    assert board.turn == "offense"
+    assert len(board.board_state) == 11
+    assert len(board.board_state[5]) == 11
+    assert len(board.board_state_history) == 3
+
+
+
 
 
 
