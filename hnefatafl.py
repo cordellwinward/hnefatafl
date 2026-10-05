@@ -35,6 +35,8 @@ class Board:
     VALID_ROWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     BOARD_SQUARE_ROW_INX = 0
     BOARD_SQUARE_COLUMN_INX = 1
+    CORNER_SQUARES = [(0, 0), (0, 10), (10, 0), (0, 0)]
+    THRONE_SQUARE = (5, 5)
     
     
     def __init__(self):
@@ -128,6 +130,12 @@ class Board:
             while (square_around[self.BOARD_SQUARE_ROW_INX] >= 0 and square_around[self.BOARD_SQUARE_ROW_INX] <= 10) and (square_around[self.BOARD_SQUARE_COLUMN_INX] >= 0 and square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10) and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] == None):
                 valid_moves.append(square_around)
                 square_around = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
+        if board_square.type == "standard":
+            if self.THRONE_SQUARE in valid_moves:
+                valid_moves.remove(self.THRONE_SQUARE)
+            for corner in self.CORNER_SQUARES:
+                if corner in valid_moves:
+                    valid_moves.remove(corner)
         
         return valid_moves
         

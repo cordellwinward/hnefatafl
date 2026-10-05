@@ -111,8 +111,8 @@ def test_translate_coordinate_into_text():
 
 def test_select_board_square():
     board = Board()
-    assert board.select_board_square((0, 3)) == [(0, 2), (0, 1), (0, 0), (1, 3), (2, 3), (3, 3), (4, 3)]
-    assert board.select_board_square((3, 0)) == [(3, 1), (3, 2), (3, 3), (3, 4), (2, 0), (1, 0), (0, 0)]
+    assert board.select_board_square((0, 3)) == [(0, 2), (0, 1), (1, 3), (2, 3), (3, 3), (4, 3)]
+    assert board.select_board_square((3, 0)) == [(3, 1), (3, 2), (3, 3), (3, 4), (2, 0), (1, 0)]
     assert board.select_board_square((5, 0)) == []
     assert board.select_board_square((2, 2)) is None
 
