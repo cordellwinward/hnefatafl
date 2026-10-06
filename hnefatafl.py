@@ -3,6 +3,7 @@ import copy
 class Piece:
     VALID_TEAMS = ["offense", "defense"]
     VALID_TYPES = ["standard", "king"]
+    
 
     def __init__(self, team, type="standard"):
         self.team = team
@@ -35,7 +36,9 @@ class Board:
     VALID_ROWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     BOARD_SQUARE_ROW_INX = 0
     BOARD_SQUARE_COLUMN_INX = 1
-    CORNER_SQUARES = [(0, 0), (0, 10), (10, 0), (0, 0)]
+    MOVEMENT_DIRECTIONS = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+    ALL_ADJACENT_SQUARES = [(0, -1), (0, 1), (-1, 0), (1, 0), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+    CORNER_SQUARES = [(0, 0), (0, 10), (10, 0), (0, 10)]
     THRONE_SQUARE = (5, 5)
     
     
@@ -115,19 +118,19 @@ class Board:
         board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
         if board_square == None or board_square.team != self.turn:
             return None
-        movement_directions =[
-            (0, -1),
-            (0, 1),
-            (-1, 0),
-            (1, 0)
-            ]
+        
         
         valid_moves = []
-        for direction in movement_directions:
+        for direction in self.MOVEMENT_DIRECTIONS:
             row, column = direction
             square_around = (coordinate[self.BOARD_SQUARE_ROW_INX] + row, coordinate[self.BOARD_SQUARE_COLUMN_INX] + column)
 
-            while (square_around[self.BOARD_SQUARE_ROW_INX] >= 0 and square_around[self.BOARD_SQUARE_ROW_INX] <= 10) and (square_around[self.BOARD_SQUARE_COLUMN_INX] >= 0 and square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10) and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] == None):
+            while (
+                (square_around[self.BOARD_SQUARE_ROW_INX] >= 0 and square_around[self.BOARD_SQUARE_ROW_INX] <= 10)
+                and (square_around[self.BOARD_SQUARE_COLUMN_INX] >= 0 
+                and square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10) 
+                and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] == None)
+                ):
                 valid_moves.append(square_around)
                 square_around = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
         if board_square.type == "standard":
@@ -156,7 +159,7 @@ class Board:
 
 
 
-    def check_for_capture():
+    def check_for_capture(self, move_to: tuple[int, int]):
         pass
 
 
@@ -167,18 +170,28 @@ if __name__ == "__main__":
     game_over = False
     while game_over != True:
         is_valid_move = False
-        while is_valid_move == False:
-            valid_moves = None
-            while valid_moves == None or valid_moves == []:
+        valid_moves = None
+        while valid_moves is None or valid_moves == []:
+            try:
                 move_from = input("Where would you like to move from? ")
                 coordinate_from = board.translate_text_into_coordinate(move_from)
-                valid_moves = board.select_board_square(coordinate_from)
-                if valid_moves == None:
-                    print("You have no pieces on this tile.")
-                elif valid_moves == []:
-                    print("This piece has no possible moves")
-            move_to = input("Where would you like to move to? ")
-            coordinate_to = board.translate_text_into_coordinate(move_to)
+            except ValueError:
+                print("Invalid input. Please enter a valid board square such as 'A1'.")
+                continue
+            valid_moves = board.select_board_square(coordinate_from)
+            if valid_moves == None:
+                print("You have no pieces on this tile.")
+            elif valid_moves == []:
+                print("This piece has no possible moves")
+        while is_valid_move == False:
+            try:
+                move_to = input("Where would you like to move to? (Enter 'back' to choose new piece to move) ")
+                if move_to.lower().strip() == "back":
+                    break
+                coordinate_to = board.translate_text_into_coordinate(move_to)
+            except ValueError:
+                print("Invalid input. Please enter a valid board square such as 'A1'.")
+                continue
             if coordinate_to in valid_moves:
                 board.move_piece(coordinate_from, coordinate_to)
                 is_valid_move = True
