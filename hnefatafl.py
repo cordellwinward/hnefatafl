@@ -44,6 +44,8 @@ class Board:
     
     def __init__(self):
         self.turn = "offense"
+        self.game_over = False
+        self.victor = ""
         #Maps the peices on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
         self.init_board_state = [
             [".", ".", ".", "A", "A", "A", "A", "A", ".", ".", "."],
@@ -150,6 +152,7 @@ class Board:
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
         self.board_state_history.append(copy.deepcopy(self.board_state))
+        self.check_for_capture(move_to)
 
         #Change turns
         if self.turn == "offense":
@@ -160,7 +163,64 @@ class Board:
 
 
     def check_for_capture(self, move_to: tuple[int, int]):
+        piece = self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]]
+        for row, column in self.MOVEMENT_DIRECTIONS:
+            square_around = ((move_to[self.BOARD_SQUARE_ROW_INX] + row), (move_to[self.BOARD_SQUARE_COLUMN_INX] + column))
+            if not (0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+                continue
+            square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
+            
+            if square_around_piece is not None and square_around_piece.team != piece.team:
+                capturing_square = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
+                if not (0 <= capturing_square[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+                    continue
+                capturing_square_piece = self.board_state[capturing_square[self.BOARD_SQUARE_ROW_INX]][capturing_square[self.BOARD_SQUARE_COLUMN_INX]] 
+                
+                if capturing_square_piece is None and capturing_square not in self.CORNER_SQUARES and capturing_square != self.THRONE_SQUARE:
+                    pass
+                elif (capturing_square in self.CORNER_SQUARES or
+                    (capturing_square == self.THRONE_SQUARE and
+                    self.board_state[self.THRONE_SQUARE[self.BOARD_SQUARE_ROW_INX]][self.THRONE_SQUARE[self.BOARD_SQUARE_COLUMN_INX]] is None) or
+                    capturing_square_piece.team == piece.team):
+                    
+                    match square_around_piece.type:
+                        
+                        case "standard":
+                            self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] = None
+                        case "king":
+                            self.capture_king()
+
+    def capture_king(self):
         pass
+        # for row, column in self.MOVEMENT_DIRECTIONS:
+        #     king_capturing_square = (
+        #         square_around[self.BOARD_SQUARE_ROW_INX]
+        #         + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column
+        #         )
+        #     if (not (0 <= king_capturing_square[self.BOARD_SQUARE_ROW_INX] <= 10) or 
+        #         not (0 <= king_capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= 10)):
+        #         continue
+        #     king_capturing_piece = (
+        #     (king_capturing_square[self.BOARD_SQUARE_ROW_INX] + row,
+        #     king_capturing_square[self.BOARD_SQUARE_COLUMN_INX] + column)
+        #     )
+        #     king_capturing_pieces = 0
+        #     if ((king_capturing_square in self.CORNER_SQUARES or
+        #         king_capturing_square == self.THRONE_SQUARE or
+        #         king_capturing_piece.team == piece.team)):
+        #         king_capturing_pieces += 1
+        #     elif (king_capturing_square is None
+        #         or king_capturing_square.type == square_around.type):
+        #         break
+        
+        # if king_capturing_pieces == 4:
+        #     self.game_over = True
+        #     self.victor = "offense"
+                                    
+                                
+                    
+
+
 
 
 if __name__ == "__main__":
