@@ -38,7 +38,7 @@ class Board:
     BOARD_SQUARE_COLUMN_INX = 1
     MOVEMENT_DIRECTIONS = [(0, -1), (0, 1), (-1, 0), (1, 0)]
     ALL_ADJACENT_SQUARES = [(0, -1), (0, 1), (-1, 0), (1, 0), (1, 1), (-1, 1), (1, -1), (-1, -1)]
-    CORNER_SQUARES = [(0, 0), (0, 10), (10, 0), (0, 10)]
+    CORNER_SQUARES = [(0, 0), (0, 10), (10, 0), (10, 10)]
     THRONE_SQUARE = (5, 5)
     
     
@@ -192,32 +192,10 @@ class Board:
 
     def capture_king(self):
         pass
-        # for row, column in self.MOVEMENT_DIRECTIONS:
-        #     king_capturing_square = (
-        #         square_around[self.BOARD_SQUARE_ROW_INX]
-        #         + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column
-        #         )
-        #     if (not (0 <= king_capturing_square[self.BOARD_SQUARE_ROW_INX] <= 10) or 
-        #         not (0 <= king_capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= 10)):
-        #         continue
-        #     king_capturing_piece = (
-        #     (king_capturing_square[self.BOARD_SQUARE_ROW_INX] + row,
-        #     king_capturing_square[self.BOARD_SQUARE_COLUMN_INX] + column)
-        #     )
-        #     king_capturing_pieces = 0
-        #     if ((king_capturing_square in self.CORNER_SQUARES or
-        #         king_capturing_square == self.THRONE_SQUARE or
-        #         king_capturing_piece.team == piece.team)):
-        #         king_capturing_pieces += 1
-        #     elif (king_capturing_square is None
-        #         or king_capturing_square.type == square_around.type):
-        #         break
+
         
-        # if king_capturing_pieces == 4:
-        #     self.game_over = True
-        #     self.victor = "offense"
-                                    
-                                
+    def check_for_game_end_conditions(self):
+        pass                                
                     
 
 
@@ -227,8 +205,7 @@ if __name__ == "__main__":
 
     board = Board()
     print(board)
-    game_over = False
-    while game_over != True:
+    while board.game_over != True:
         is_valid_move = False
         valid_moves = None
         while valid_moves is None or valid_moves == []:
