@@ -140,6 +140,157 @@ def test_move_piece():
     assert len(board.board_state[5]) == 11
     assert len(board.board_state_history) == 3
 
+    #Make sure check_for_capture was called
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][3] = Piece("offense")
+    board.board_state[5][4] = Piece("defense")
+    board.board_state[5][8] = Piece("offense")
+
+    board.move_piece((5, 8), (5, 5))
+    assert board.board_state[5][5].team == "offense"
+    assert board.board_state[5][4] is None
+
+
+def test_check_for_capture_corners():
+    #Corner Captures
+    board = Board()
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[0][1] = Piece("defense")
+    board.board_state[0][2] = Piece("offense")
+    board.check_for_capture((0, 2))
+    assert board.board_state[0][1] is None
+    assert board.board_state[0][2].team == "offense"
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[0][9] = Piece("offense")
+    board.board_state[0][8] = Piece("defense")
+    board.check_for_capture((0, 8))
+    assert board.board_state[0][9] is None
+
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[10][1] = Piece("defense")
+    board.board_state[10][2] = Piece("offense")
+    board.check_for_capture((10, 2))
+    assert board.board_state[10][1] is None
+    
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[10][9] = Piece("offense")
+    board.board_state[10][8] = Piece("defense")
+    board.check_for_capture((10, 8))
+    assert board.board_state[10][9] is None
+
+def test_for_capture_edges():
+    # Board Edges & Boundary Safety (Indices 0, 10, 1, and 9)
+    board = Board()
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[4][0] = Piece("defense")
+    board.board_state[5][0] = Piece("offense")
+    board.board_state[6][0] = Piece("defense")
+    board.check_for_capture((6, 0))
+    assert board.board_state[5][0] is None
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[0][4] = Piece("defense")
+    board.board_state[0][5] = Piece("offense")
+    board.board_state[0][6] = Piece("defense")
+    board.check_for_capture((0, 6))
+    assert board.board_state[0][5] is None
+    
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][0] = Piece("defense")
+    board.board_state[5][10] = Piece("offense")
+    board.board_state[5][1] = Piece("offense")
+    board.check_for_capture((5, 1))
+    assert board.board_state[5][0].team == "defense"
+    
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][10] = Piece("defense")
+    board.board_state[5][9] = Piece("offense")
+    board.check_for_capture((5, 9))
+    assert board.board_state[5][10].team == "defense"
+
+def test_for_capture_throne():
+    #Throne Hostility
+    board = Board()    
+
+    #empty throne
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[5][6] = Piece("offense")
+    board.board_state[5][7] = Piece("defense")
+    board.check_for_capture((5, 7))
+    assert board.board_state[5][6] is None
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][5] = Piece("defense", type="king")
+    board.board_state[5][6] = Piece("defense")
+    board.board_state[5][7] = Piece("offense")
+    board.check_for_capture((5, 7))
+    assert board.board_state[5][6].team == "defense"
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[5][5] = Piece("defense", type="king")
+    board.board_state[5][6] = Piece("offense")
+    board.board_state[5][7] = Piece("defense")
+    board.check_for_capture((5, 7))
+    assert board.board_state[5][6] is None
+
+def test_check_for_capture_special():
+    #King not captured by 2 pieces
+    board = Board()
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[3][2] = Piece("offense")
+    board.board_state[3][3] = Piece("defense", type="king")
+    board.board_state[3][4] = Piece("offense")
+    board.check_for_capture((3, 4))
+    assert board.board_state[3][3].type == "king"
+
+    #Multi-Capture
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][7] = Piece("offense")
+    board.board_state[6][7] = Piece("defense")
+    board.board_state[7][7] = Piece("offense")
+    board.board_state[7][8] = Piece("defense")
+    board.board_state[7][9] = Piece("offense")
+    board.check_for_capture((7, 7))
+    assert board.board_state[6][7] is None
+    assert board.board_state[7][8] is None
+
+    #Isn't captured when moving between hostile pieces
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[7][2] = Piece("defense")
+    board.board_state[7][3] = Piece("offense")
+    board.board_state[7][4] = Piece("defense")
+    board.check_for_capture((7, 3))
+    assert board.board_state[7][3].team == "offense"
+
+    #Can't capture friendly pieces
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[7][2] = Piece("defense")
+    board.board_state[7][3] = Piece("defense")
+    board.board_state[7][4] = Piece("defense")
+    board.check_for_capture((7, 2))
+    assert board.board_state[7][3].team == "defense"
 
 
 

@@ -151,8 +151,8 @@ class Board:
         piece = self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]]
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
-        self.board_state_history.append(copy.deepcopy(self.board_state))
         self.check_for_capture(move_to)
+        self.board_state_history.append(copy.deepcopy(self.board_state))
 
         #Change turns
         if self.turn == "offense":
