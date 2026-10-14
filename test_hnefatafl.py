@@ -292,8 +292,40 @@ def test_check_for_capture_special():
     board.check_for_capture((7, 2))
     assert board.board_state[7][3].team == "defense"
 
+def test_capture_king():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][5] = Piece("defense", type = "king")
+    board.board_state[5][4] = Piece("offense")
+    board.board_state[4][5] = Piece("offense")
+    board.board_state[6][5] = Piece("offense")
+    board.board_state[5][6] = Piece("offense")
+    board.capture_king((5, 5))
+    assert board.game_over == True
+    assert board.victor == "offense"
 
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][4] = Piece("defense", type = "king")
+    board.board_state[5][3] = Piece("offense")
+    board.board_state[4][4] = Piece("offense")
+    board.board_state[6][4] = Piece("offense")
+    board.capture_king((5, 4))
+    assert board.game_over == True
+    assert board.victor == "offense"
 
+    board.game_over = False
+    board.victor = ""
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[0][5] = Piece("defense", type = "king")
+    board.board_state[0][4] = Piece("offense")
+    board.board_state[0][6] = Piece("offense")
+    board.board_state[1][5] = Piece("offense")
+    board.capture_king((0, 5))
+    assert board.game_over == False
+    assert board.victor == ""
 
 
 pytest.main(["-v", "--tb=line", "-rN", __file__])

@@ -188,13 +188,35 @@ class Board:
                         case "standard":
                             self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] = None
                         case "king":
-                            self.capture_king()
+                            self.capture_king(square_around)
 
-    def capture_king(self):
-        pass
+    def capture_king(self, kings_square):
+        king_row, king_column = kings_square
+        num_attacking_pieces = 0
+        for row, column in self.MOVEMENT_DIRECTIONS:
+            square_around = (king_row + row, king_column + column)
+            square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
+            if not (0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+                break
+            if (square_around == self.THRONE_SQUARE or
+                (square_around_piece is not None
+                 and square_around_piece.team == "offense")):
+                num_attacking_pieces += 1
+            else:
+                break
+        if num_attacking_pieces == 4:
+            self.game_over = True
+            self.victor = "offense"
+        
 
         
     def check_for_game_end_conditions(self):
+        pass
+
+    def check_for_encircled_defenders(self):
+        pass
+
+    def check_for_possible_moves(self):
         pass                                
                     
 
@@ -235,3 +257,4 @@ if __name__ == "__main__":
                 print(board)
             else:
                 print("That move is invalid. Please make a valid move")
+    print(f"Game Over. {board.victor} wins")
