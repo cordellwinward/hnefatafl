@@ -323,6 +323,7 @@ def test_capture_king():
     board.board_state[0][4] = Piece("offense")
     board.board_state[0][6] = Piece("offense")
     board.board_state[1][5] = Piece("offense")
+    board.board_state[-1][5] = Piece("offense")
     board.capture_king((0, 5))
     assert board.game_over == False
     assert board.victor == ""

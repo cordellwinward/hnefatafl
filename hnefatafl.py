@@ -5,7 +5,7 @@ class Piece:
     VALID_TYPES = ["standard", "king"]
     
 
-    def __init__(self, team, type="standard"):
+    def __init__(self, team: str, type: str ="standard"):
         self.team = team
         self.type = type
 
@@ -92,7 +92,7 @@ class Board:
             row_counter += 1
         return board
     
-    def translate_text_into_coordinate(self, coordinate_str):
+    def translate_text_into_coordinate(self, coordinate_str: str):
         if len(coordinate_str.strip()) < 2:
             raise ValueError("Not a valid board square")
         column = coordinate_str.lower()[0]
@@ -106,7 +106,7 @@ class Board:
         column = self.VALID_COLUMNS.index(column)
         return (row, column)
         
-    def translate_coordinate_into_text(self, coordinate):
+    def translate_coordinate_into_text(self, coordinate: tuple[int, int]):
         row, column = coordinate
         if (not 0 <= row <= 10) or (not 0 <= column <=10):
             raise ValueError("Invalid input")
@@ -190,7 +190,7 @@ class Board:
                         case "king":
                             self.capture_king(square_around)
 
-    def capture_king(self, kings_square):
+    def capture_king(self, kings_square: tuple [int, int]):
         king_row, king_column = kings_square
         num_attacking_pieces = 0
         for row, column in self.MOVEMENT_DIRECTIONS:
