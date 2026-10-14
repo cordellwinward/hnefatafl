@@ -329,4 +329,34 @@ def test_capture_king():
     assert board.victor == ""
 
 
+def test_check_for_king_in_corner():
+    board = Board()
+
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[0][0] = Piece("defense", type = "king")
+    board._check_for_king_in_corner()
+    assert board.game_over == True
+    assert board.victor == "defense"
+
+    board.game_over = False
+    board.victor = ""
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[10][10] = Piece("defense", type = "king")
+    board._check_for_king_in_corner()
+    assert board.game_over == True
+    assert board.victor == "defense"
+
+    board.game_over = False
+    board.victor = ""
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[10][10] = Piece("defense", type = "king")
+    board._check_for_king_in_corner()
+    assert board.game_over == False
+    assert board.victor == ""
+
+
+
 pytest.main(["-v", "--tb=line", "-rN", __file__])

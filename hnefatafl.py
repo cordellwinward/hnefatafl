@@ -210,13 +210,26 @@ class Board:
         
 
         
-    def check_for_game_end_conditions(self):
+    def _check_for_game_end_conditions(self):
+        self._check_for_king_in_corner()
+        # self._check_for_encircled_defenders()
+        # self._check_for_possible_moves()
+
+    def _check_for_king_in_corner(self):
+        match self.turn:
+            case "offense":
+                pass
+            case "defense":
+                for square in self.CORNER_SQUARES:
+                    if square != None:
+                        self.game_over = True
+                        self.victor = "defense"
+                        break
+
+    def _check_for_encircled_defenders(self):
         pass
 
-    def check_for_encircled_defenders(self):
-        pass
-
-    def check_for_possible_moves(self):
+    def _check_for_possible_moves(self):
         pass                                
                     
 
