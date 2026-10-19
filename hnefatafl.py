@@ -152,6 +152,7 @@ class Board:
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
         self.check_for_capture(move_to)
+        self._check_for_game_end_conditions()
         self.board_state_history.append(copy.deepcopy(self.board_state))
 
         #Change turns
@@ -221,7 +222,9 @@ class Board:
                 pass
             case "defense":
                 for square in self.CORNER_SQUARES:
-                    if square != None:
+                    row, column = square
+                    square_piece = self.board_state[row][column]
+                    if square_piece != None:
                         self.game_over = True
                         self.victor = "defense"
                         break

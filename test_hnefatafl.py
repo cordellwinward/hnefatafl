@@ -351,6 +351,15 @@ def test_check_for_king_in_corner():
     board.game_over = False
     board.victor = ""
     board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[4][4] = Piece("defense", type = "king")
+    board._check_for_king_in_corner()
+    assert board.game_over == False
+    assert board.victor == ""
+
+    board.game_over = False
+    board.victor = ""
+    board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "offense"
     board.board_state[10][10] = Piece("defense", type = "king")
     board._check_for_king_in_corner()
