@@ -328,6 +328,15 @@ def test_capture_king():
     assert board.game_over == False
     assert board.victor == ""
 
+    board.game_over = False
+    board.victor = ""
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][10] = Piece("defense", type="king")
+    board.board_state[5][9] = Piece("offense")
+    board.capture_king((5, 10))   # IndexError before the fix
+    assert board.game_over == False
+    assert board.victor == ""
 
 def test_check_for_king_in_corner():
     board = Board()

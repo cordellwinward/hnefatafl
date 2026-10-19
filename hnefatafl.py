@@ -196,9 +196,9 @@ class Board:
         num_attacking_pieces = 0
         for row, column in self.MOVEMENT_DIRECTIONS:
             square_around = (king_row + row, king_column + column)
-            square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
             if not (0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10):
                 break
+            square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
             if (square_around == self.THRONE_SQUARE or
                 (square_around_piece is not None
                  and square_around_piece.team == "offense")):
