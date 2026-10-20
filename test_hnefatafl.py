@@ -121,6 +121,51 @@ def test_select_board_square():
     assert board.select_board_square((5, 5)) == []
     assert board.select_board_square((0, 3)) is None
 
+
+def test_find_possible_paths_stops_at_pieces():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[5][5] = Piece("offense")
+    board.board_state[5][2] = Piece("defense")
+    board.board_state[5][8] = Piece("defense")
+    board.board_state[2][5] = Piece("defense")
+    board.board_state[8][5] = Piece("defense")
+
+    assert board._find_possible_paths((5, 5)) == [
+        (5, 4), (5, 3),
+        (5, 6), (5, 7),
+        (4, 5), (3, 5),
+        (6, 5), (7, 5),
+    ]
+
+
+def test_find_valid_moves_for_standard_piece():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+
+    board.board_state[5][4] = Piece("offense")
+    standard_moves = board._find_valid_moves((5, 4))
+    assert board.THRONE_SQUARE not in standard_moves
+
+    board.board_state[0][1] = Piece("offense")
+    standard_moves = board._find_valid_moves((0, 1))
+    assert (0, 0) not in standard_moves
+    assert (0, 2) in standard_moves
+
+    assert board._find_valid_moves((0, 0)) is None
+
+
+def test_find_valid_moves_for_king_includes_special_squares():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+
+    board.board_state[5][4] = Piece("defense", type="king")
+    assert board.THRONE_SQUARE in board._find_valid_moves((5, 4))
+
+    board.board_state[0][1] = Piece("defense", type="king")
+    assert (0, 0) in board._find_valid_moves((0, 1))
+
+
 def test_move_piece():
 
     board = Board()
@@ -186,7 +231,7 @@ def test_check_for_capture_corners():
     board.check_for_capture((10, 8))
     assert board.board_state[10][9] is None
 
-def test_for_capture_edges():
+def test_check_for_capture_edges():
     # Board Edges & Boundary Safety (Indices 0, 10, 1, and 9)
     board = Board()
 
@@ -323,6 +368,7 @@ def test_capture_king():
     board.board_state[0][4] = Piece("offense")
     board.board_state[0][6] = Piece("offense")
     board.board_state[1][5] = Piece("offense")
+    # Ensure an off-board direction does not wrap to the opposite board edge.
     board.board_state[-1][5] = Piece("offense")
     board.capture_king((0, 5))
     assert board.game_over == False
@@ -376,5 +422,5 @@ def test_check_for_king_in_corner():
     assert board.victor == ""
 
 
-
-pytest.main(["-v", "--tb=line", "-rN", __file__])
+if __name__ == "__main__":
+    pytest.main(["-v", "--tb=line", "-rN", __file__])

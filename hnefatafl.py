@@ -118,11 +118,18 @@ class Board:
     
     def select_board_square(self, coordinate: tuple[int, int]) -> list[tuple[int, int]] | None:
         board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
-        if board_square == None or board_square.team != self.turn:
+        if board_square is None or board_square.team != self.turn:
             return None
+        return self._find_valid_moves(coordinate)
         
         
-        valid_moves = []
+
+    def _find_possible_paths(self, coordinate: tuple[int, int]):
+
+        '''Returns all squares in a unbroken path from 
+        a coordinate including the throne and corner squares.'''
+
+        possible_paths = []
         for direction in self.MOVEMENT_DIRECTIONS:
             row, column = direction
             square_around = (coordinate[self.BOARD_SQUARE_ROW_INX] + row, coordinate[self.BOARD_SQUARE_COLUMN_INX] + column)
@@ -131,10 +138,18 @@ class Board:
                 (square_around[self.BOARD_SQUARE_ROW_INX] >= 0 and square_around[self.BOARD_SQUARE_ROW_INX] <= 10)
                 and (square_around[self.BOARD_SQUARE_COLUMN_INX] >= 0 
                 and square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10) 
-                and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] == None)
+                and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] is None)
                 ):
-                valid_moves.append(square_around)
+                possible_paths.append(square_around)
                 square_around = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
+        return possible_paths
+
+    def _find_valid_moves(self, coordinate: tuple[int, int]):
+        '''Finds and returns all valid moves a square can make without validating whose turn it is'''
+        board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
+        if board_square is None:
+            return None
+        valid_moves = self._find_possible_paths(coordinate)
         if board_square.type == "standard":
             if self.THRONE_SQUARE in valid_moves:
                 valid_moves.remove(self.THRONE_SQUARE)
@@ -144,7 +159,6 @@ class Board:
         
         return valid_moves
         
-
 
 
     def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]):
@@ -254,7 +268,7 @@ if __name__ == "__main__":
                 print("Invalid input. Please enter a valid board square such as 'A1'.")
                 continue
             valid_moves = board.select_board_square(coordinate_from)
-            if valid_moves == None:
+            if valid_moves is None:
                 print("You have no pieces on this tile.")
             elif valid_moves == []:
                 print("This piece has no possible moves")
