@@ -166,7 +166,7 @@ class Board:
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
         captured_pieces_team = self.check_for_capture(move_to)
-        self._check_for_game_end_conditions(captured_pieces_team)
+        self._check_for_game_end_conditions(move_to, captured_pieces_team)
         self.board_state_history.append(copy.deepcopy(self.board_state))
 
         #Change turns
@@ -208,7 +208,7 @@ class Board:
                             self.capture_king(square_around)
         return captured_team
 
-    def capture_king(self, kings_square: tuple [int, int]):
+    def capture_king(self, kings_square: tuple[int, int]):
         king_row, king_column = kings_square
         num_attacking_pieces = 0
         for row, column in self.MOVEMENT_DIRECTIONS:
@@ -228,9 +228,10 @@ class Board:
         
 
         
-    def _check_for_game_end_conditions(self, captured_pieces_team: str | None):
+    def _check_for_game_end_conditions(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
         self._check_for_king_in_corner()
-        # self._check_for_encircled_defenders(captured_pieces_team)
+        if self.turn == "offense":
+            self._check_for_encircled_defenders(moved_to_square, captured_pieces_team)
         # self._check_for_possible_moves()
 
     def _check_for_king_in_corner(self):
@@ -246,14 +247,46 @@ class Board:
                         self.victor = "defense"
                         break
 
-    def _check_for_encircled_defenders(self, captured_pieces_team: str | None):
-        pass
+    def find_all_pieces_of_team(self, team: str) -> list[tuple[int, int]]:
+        piece_locations = []
+        row_inx = 0
+        for row in self.board_state:
+            column_inx = 0
+            for column in row:
+                if column is not None and column.team == team:
+                    piece_locations.append((row_inx, column_inx))
+                column_inx += 1
+            row_inx += 1
+        return piece_locations
+    
+    def _check_for_encircled_defenders(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
+        if (captured_pieces_team == "defense" 
+        or self._check_for_2_pieces_of_team_next_to_square(moved_to_square, captured_pieces_team)):
+            pass
+
+    def _check_for_2_pieces_of_team_next_to_square(self, square: tuple[int, int], team: str):
+        "checks for 2 or more pieces of the passed team next to a passed square"
+        row, column = square
+        num_of_adjacent_pieces = 0
+        for adjacent_row, adjacent_column in self.ALL_ADJACENT_SQUARES:
+            adjacent_row += row
+            adjacent_column += column
+            if not (0 <= adjacent_row <= 10) or not (0 <= adjacent_column <= 10):
+                continue
+            if (self.board_state[adjacent_row][adjacent_column] is not None
+                and self.board_state[adjacent_row][adjacent_column].team == team):
+                num_of_adjacent_pieces += 1
+        if num_of_adjacent_pieces >= 2:
+            return True
+        else:
+            return False
+
 
     def _check_for_possible_moves(self):
         pass                                
                     
-    def find_all_pieces(self, team: str):
-        pass
+
+
 
 
 

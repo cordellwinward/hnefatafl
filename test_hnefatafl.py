@@ -436,6 +436,62 @@ def test_check_for_king_in_corner():
     assert board.game_over == False
     assert board.victor == ""
 
+def test_find_all_pieces_of_team():
+    board = Board()
+
+    assert board.find_all_pieces_of_team("defense") == [
+        (3, 5),
+        (4, 4), (4, 5), (4, 6),
+        (5, 3), (5, 4), (5, 5), (5, 6), (5, 7),
+        (6, 4), (6, 5), (6, 6),
+        (7, 5),
+    ]
+
+    assert board.find_all_pieces_of_team("offense") == [
+        (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+        (1, 5),
+        (3, 0), (3, 10),
+        (4, 0), (4, 10),
+        (5, 0), (5, 1), (5, 9), (5, 10),
+        (6, 0), (6, 10),
+        (7, 0), (7, 10),
+        (9, 5),
+        (10, 3), (10, 4), (10, 5), (10, 6), (10, 7),
+    ]
+
+
+def test_check_for_2_pieces_of_team_next_to_square():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[4][4] = Piece("defense")
+    board.board_state[6][6] = Piece("defense")
+
+    assert board._check_for_2_pieces_of_team_next_to_square(
+        (5, 5), "defense"
+    ) is True
+
+
+def test_check_for_2_pieces_of_team_next_to_square_requires_two_matching_pieces():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[4][4] = Piece("defense")
+    board.board_state[4][5] = Piece("offense")
+
+    assert board._check_for_2_pieces_of_team_next_to_square(
+        (5, 5), "defense"
+    ) is False
+
+
+def test_check_for_2_pieces_of_team_next_to_square_handles_board_edge():
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[9][9] = Piece("defense")
+    board.board_state[9][10] = Piece("defense")
+
+    assert board._check_for_2_pieces_of_team_next_to_square(
+        (10, 10), "defense"
+    ) is True
+
 
 if __name__ == "__main__":
     pytest.main(["-v", "--tb=line", "-rN", __file__])
