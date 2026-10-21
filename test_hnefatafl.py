@@ -185,16 +185,68 @@ def test_move_piece():
     assert len(board.board_state[5]) == 11
     assert len(board.board_state_history) == 3
 
-    #Make sure check_for_capture was called
+
+def test_move_piece_rejects_invalid_moves():
+    board = Board()
+
+    with pytest.raises(ValueError, match="move_from is outside the board"):
+        board.move_piece((-1, 3), (0, 3))
+
+    with pytest.raises(ValueError, match="move_to is outside the board"):
+        board.move_piece((0, 3), (0, 11))
+
+    with pytest.raises(ValueError, match="move_from does not contain a piece"):
+        board.move_piece((2, 2), (2, 3))
+
+    with pytest.raises(ValueError, match="not its team's turn"):
+        board.move_piece((5, 5), (5, 4))
+
+    with pytest.raises(ValueError, match="move_to is occupied"):
+        board.move_piece((0, 3), (0, 4))
+
+    with pytest.raises(ValueError, match="not a valid move"):
+        board.move_piece((0, 3), (1, 4))
+
+
+def test_move_piece_integration():
+    # Verify that move_piece() triggers capture handling.
+    board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "offense"
-    board.board_state[5][3] = Piece("offense")
-    board.board_state[5][4] = Piece("defense")
-    board.board_state[5][8] = Piece("offense")
+    board.board_state[5][5] = Piece("defense")
+    board.board_state[4][4] = Piece("defense")
+    board.board_state[5][6] = Piece("offense")
+    board.board_state[5][2] = Piece("offense")
 
-    board.move_piece((5, 8), (5, 5))
-    assert board.board_state[5][5].team == "offense"
-    assert board.board_state[5][4] is None
+    board.move_piece((5, 2), (5, 4))
+
+    assert board.board_state[5][4].team == "offense"
+    assert board.board_state[5][5] is None
+
+    # Verify that encirclement through move_piece() ends the game.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][5] = Piece("defense")
+    board.board_state[5][6] = Piece("offense")
+    board.board_state[5][2] = Piece("offense")
+
+    board.move_piece((5, 2), (5, 4))
+
+    assert board.game_over
+    assert board.victor == "offense"
+
+    # Verify that an ordinary move does not end the game.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][8] = Piece("offense")
+    board.board_state[4][4] = Piece("defense")
+
+    board.move_piece((5, 8), (5, 7))
+
+    assert not board.game_over
+    assert board.victor == ""
 
 
 def test_check_for_capture_corners():
@@ -275,7 +327,7 @@ def test_check_for_capture_edges():
     assert captured_team is None
     assert board.board_state[5][10].team == "defense"
 
-def test_for_capture_throne():
+def test_check_for_capture_throne():
     #Throne Hostility
     board = Board()    
 
@@ -460,7 +512,43 @@ def test_find_all_pieces_of_team():
     ]
 
 
+def test_run_algorithm_for_encircled_defenders():
+    # A defender on the edge is not encircled.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[0][5] = Piece("defense")
+
+    assert board._run_algorithm_for_encircled_defenders() is False
+
+    # Defenders enclosed by opposing pieces are encircled.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[5][5] = Piece("defense")
+    board.board_state[4][4] = Piece("defense")
+
+    for column in range(3, 8):
+        board.board_state[3][column] = Piece("offense")
+        board.board_state[7][column] = Piece("offense")
+
+    for row in range(4, 7):
+        board.board_state[row][3] = Piece("offense")
+        board.board_state[row][7] = Piece("offense")
+
+    assert board._run_algorithm_for_encircled_defenders() is True
+
+    # An open path to the edge means the defenders are not encircled.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[5][5] = Piece("defense")
+    board.board_state[5][4] = Piece("offense")
+    board.board_state[5][6] = Piece("offense")
+    board.board_state[6][5] = Piece("offense")
+
+    assert board._run_algorithm_for_encircled_defenders() is False
+
+
 def test_check_for_2_pieces_of_team_next_to_square():
+    # Two matching adjacent pieces return True.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
     board.board_state[4][4] = Piece("defense")
@@ -470,8 +558,7 @@ def test_check_for_2_pieces_of_team_next_to_square():
         (5, 5), "defense"
     ) is True
 
-
-def test_check_for_2_pieces_of_team_next_to_square_requires_two_matching_pieces():
+    # Fewer than two matching pieces return False.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
     board.board_state[4][4] = Piece("defense")
@@ -481,8 +568,7 @@ def test_check_for_2_pieces_of_team_next_to_square_requires_two_matching_pieces(
         (5, 5), "defense"
     ) is False
 
-
-def test_check_for_2_pieces_of_team_next_to_square_handles_board_edge():
+    # Matching pieces near the board edge are counted safely.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
     board.board_state[9][9] = Piece("defense")

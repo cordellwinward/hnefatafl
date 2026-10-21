@@ -162,6 +162,19 @@ class Board:
 
 
     def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]):
+        if not (0 <= move_from[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= move_from[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+            raise ValueError("move_from is outside the board")
+        if not (0 <= move_to[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= move_to[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+            raise ValueError("move_to is outside the board")
+        if self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] is None:
+            raise ValueError("move_from does not contain a piece")
+        if self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]].team != self.turn:
+            raise ValueError("move_from piece cannot move since it is not its team's turn")
+        if self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] is not None:
+            raise ValueError("move_to is occupied")
+        if move_to not in self._find_valid_moves(move_from):
+            raise ValueError("That is not a valid move")
+        
         piece = self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]]
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
@@ -231,7 +244,9 @@ class Board:
     def _check_for_game_end_conditions(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
         self._check_for_king_in_corner()
         if self.turn == "offense":
-            self._check_for_encircled_defenders(moved_to_square, captured_pieces_team)
+            if self._check_for_encircled_defenders(moved_to_square, captured_pieces_team):
+                self.game_over = True
+                self.victor = "offense"
         # self._check_for_possible_moves()
 
     def _check_for_king_in_corner(self):
@@ -242,7 +257,7 @@ class Board:
                 for square in self.CORNER_SQUARES:
                     row, column = square
                     square_piece = self.board_state[row][column]
-                    if square_piece != None:
+                    if square_piece is not None:
                         self.game_over = True
                         self.victor = "defense"
                         break
@@ -261,9 +276,38 @@ class Board:
     
     def _check_for_encircled_defenders(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
         if (captured_pieces_team == "defense" 
-        or self._check_for_2_pieces_of_team_next_to_square(moved_to_square, captured_pieces_team)):
-            pass
+        or self._check_for_2_pieces_of_team_next_to_square(moved_to_square, "defense")):
+            return self._run_algorithm_for_encircled_defenders()
+        return False
+        
 
+    def _run_algorithm_for_encircled_defenders(self) -> bool:
+        "Runs full algorithm to check if defenders completely encircled. Returns False if defenders not completely encircled. True if they are."
+        defensive_squares = self.find_all_pieces_of_team("defense")
+        checked_squares = set()
+        for square in defensive_squares:
+            row, column = square
+            if row in [10, 0] or column in [10, 0]:
+                return False
+            if not self._run_algorithm_for_encircled_defenders_recursion(square,checked_squares):
+                return False
+        return True
+
+    def _run_algorithm_for_encircled_defenders_recursion(self, square, checked_squares):
+        possible_paths = self._find_possible_paths(square)
+        for next_square in possible_paths:
+            if next_square in checked_squares:
+                continue
+            checked_squares.add(next_square)
+            row, column = next_square
+            if row in [10, 0] or column in [10, 0]:
+                return False
+            if not self._run_algorithm_for_encircled_defenders_recursion(next_square, checked_squares):
+                return False
+        return True
+                    
+    
+    
     def _check_for_2_pieces_of_team_next_to_square(self, square: tuple[int, int], team: str):
         "checks for 2 or more pieces of the passed team next to a passed square"
         row, column = square
