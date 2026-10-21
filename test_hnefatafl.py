@@ -248,6 +248,49 @@ def test_move_piece_integration():
     assert not board.game_over
     assert board.victor == ""
 
+    # Verify that moving the king to a corner ends the game for defense.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[0][1] = Piece("defense", type="king")
+    board.board_state[4][4] = Piece("offense")
+
+    board.move_piece((0, 1), (0, 0))
+
+    assert board.game_over
+    assert board.victor == "defense"
+
+    # Verify that capturing the king through move_piece() ends the game.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[5][5] = Piece("defense", type="king")
+    board.board_state[4][5] = Piece("offense")
+    board.board_state[6][5] = Piece("offense")
+    board.board_state[5][6] = Piece("offense")
+    board.board_state[5][2] = Piece("offense")
+
+    board.move_piece((5, 2), (5, 4))
+
+    assert board.game_over
+    assert board.victor == "offense"
+
+    # Verify that the game ends when the next team has no legal moves.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[4][4] = Piece("defense")
+    board.board_state[3][4] = Piece("offense")
+    board.board_state[5][4] = Piece("offense")
+    board.board_state[4][3] = Piece("offense")
+    board.board_state[4][5] = Piece("offense")
+    board.board_state[0][3] = Piece("offense")
+
+    board.move_piece((0, 3), (0, 1))
+
+    assert board.game_over
+    assert board.victor == "offense"
+
 
 def test_check_for_capture_corners():
     #Corner Captures
@@ -451,42 +494,81 @@ def test_capture_king():
     assert board.game_over == False
     assert board.victor == ""
 
+
+def test_check_for_game_end_conditions():
+    # No possible moves: the team that just moved wins.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board._check_for_game_end_conditions((4, 4), None)
+    assert board.game_over is True
+    assert board.victor == "offense"
+
+    # Encirclement: offense wins.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[4][5] = Piece("defense")
+    board.board_state[4][4] = Piece("defense")
+
+    for column in range(3, 8):
+        board.board_state[3][column] = Piece("offense")
+        board.board_state[7][column] = Piece("offense")
+
+    for row in range(4, 7):
+        board.board_state[row][3] = Piece("offense")
+        board.board_state[row][7] = Piece("offense")
+
+    board._check_for_game_end_conditions((4, 4), "defense")
+    assert board.game_over is True
+    assert board.victor == "offense"
+
+    # King in a corner: defense wins.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "defense"
+    board.board_state[4][4] = Piece("offense")
+    board.board_state[0][0] = Piece("defense", type="king")
+
+    board._check_for_game_end_conditions((4, 4), None)
+    assert board.game_over is True
+    assert board.victor == "defense"
+
+    # No end condition: the game remains active.
+    board = Board()
+    board._check_for_game_end_conditions((0, 3), None)
+    assert board.game_over is False
+    assert board.victor == ""
+
+
 def test_check_for_king_in_corner():
     board = Board()
 
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "defense"
     board.board_state[0][0] = Piece("defense", type = "king")
-    board._check_for_king_in_corner()
-    assert board.game_over == True
-    assert board.victor == "defense"
+    assert board._check_for_king_in_corner() is True
 
     board.game_over = False
     board.victor = ""
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "defense"
     board.board_state[10][10] = Piece("defense", type = "king")
-    board._check_for_king_in_corner()
-    assert board.game_over == True
-    assert board.victor == "defense"
+    assert board._check_for_king_in_corner() is True
 
     board.game_over = False
     board.victor = ""
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "defense"
     board.board_state[4][4] = Piece("defense", type = "king")
-    board._check_for_king_in_corner()
-    assert board.game_over == False
-    assert board.victor == ""
+    assert board._check_for_king_in_corner() is False
 
     board.game_over = False
     board.victor = ""
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "offense"
     board.board_state[10][10] = Piece("defense", type = "king")
-    board._check_for_king_in_corner()
-    assert board.game_over == False
-    assert board.victor == ""
+    assert board._check_for_king_in_corner() is False
 
 def test_find_all_pieces_of_team():
     board = Board()
@@ -510,6 +592,52 @@ def test_find_all_pieces_of_team():
         (9, 5),
         (10, 3), (10, 4), (10, 5), (10, 6), (10, 7),
     ]
+
+
+def test_check_for_encircled_defenders():
+    # Completely enclosed defenders are encircled.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[4][5] = Piece("defense")
+    board.board_state[4][4] = Piece("defense")
+
+    for column in range(3, 8):
+        board.board_state[3][column] = Piece("offense")
+        board.board_state[7][column] = Piece("offense")
+
+    for row in range(4, 7):
+        board.board_state[row][3] = Piece("offense")
+        board.board_state[row][7] = Piece("offense")
+
+    assert board._check_for_encircled_defenders((4, 4), "defense") is True
+
+    # An open path to the edge means the defenders are not encircled.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[4][4] = Piece("defense")
+    board.board_state[4][3] = Piece("offense")
+    board.board_state[4][5] = Piece("offense")
+    board.board_state[5][4] = Piece("offense")
+
+    assert board._check_for_encircled_defenders((4, 4), None) is False
+
+    # Without a relevant capture or nearby defenders, no encirclement check is triggered.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[4][4] = Piece("defense")
+
+    assert board._check_for_encircled_defenders((0, 0), None) is False
+
+    # A king on the edge cannot move, but is not considered encircled because
+    # the edge is treated as an escape route by the encirclement algorithm.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.board_state[0][5] = Piece("defense", type="king")
+    board.board_state[0][4] = Piece("offense")
+    board.board_state[0][6] = Piece("offense")
+    board.board_state[1][5] = Piece("offense")
+
+    assert board._check_for_encircled_defenders((0, 5), "defense") is False
 
 
 def test_run_algorithm_for_encircled_defenders():
@@ -577,6 +705,29 @@ def test_check_for_2_pieces_of_team_next_to_square():
     assert board._check_for_2_pieces_of_team_next_to_square(
         (10, 10), "defense"
     ) is True
+
+
+def test_check_for_possible_moves():
+    # With offense's turn active, this checks whether defense has a move.
+    board = Board()
+    assert board._check_for_possible_moves() is True
+
+    # With defense's turn active, this checks whether offense has a move.
+    board.turn = "defense"
+    assert board._check_for_possible_moves() is True
+
+    # A team with no pieces has no possible moves.
+    board.board_state = [[None] * 11 for _ in range(11)]
+    assert board._check_for_possible_moves() is False
+
+    # A piece blocked in all four directions has no possible moves.
+    board.board_state[4][4] = Piece("defense")
+    board.board_state[3][4] = Piece("offense")
+    board.board_state[5][4] = Piece("offense")
+    board.board_state[4][3] = Piece("offense")
+    board.board_state[4][5] = Piece("offense")
+    board.turn = "offense"
+    assert board._check_for_possible_moves() is False
 
 
 if __name__ == "__main__":

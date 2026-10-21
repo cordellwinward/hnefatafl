@@ -242,25 +242,30 @@ class Board:
 
         
     def _check_for_game_end_conditions(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
-        self._check_for_king_in_corner()
+        if not self._check_for_possible_moves():
+            self.game_over = True
+            self.victor = self.turn
         if self.turn == "offense":
             if self._check_for_encircled_defenders(moved_to_square, captured_pieces_team):
                 self.game_over = True
                 self.victor = "offense"
-        # self._check_for_possible_moves()
+        if self.turn == "defense":
+            if self._check_for_king_in_corner():
+                self.game_over = True
+                self.victor = "defense"
 
     def _check_for_king_in_corner(self):
+        "Checks to see if the King escaped the board to the corner. Returns True if the king is on a corner square. False otherwise."
         match self.turn:
             case "offense":
-                pass
+                return False
             case "defense":
                 for square in self.CORNER_SQUARES:
                     row, column = square
                     square_piece = self.board_state[row][column]
                     if square_piece is not None:
-                        self.game_over = True
-                        self.victor = "defense"
-                        break
+                        return True
+                return False
 
     def find_all_pieces_of_team(self, team: str) -> list[tuple[int, int]]:
         piece_locations = []
@@ -280,7 +285,6 @@ class Board:
             return self._run_algorithm_for_encircled_defenders()
         return False
         
-
     def _run_algorithm_for_encircled_defenders(self) -> bool:
         "Runs full algorithm to check if defenders completely encircled. Returns False if defenders not completely encircled. True if they are."
         defensive_squares = self.find_all_pieces_of_team("defense")
@@ -305,8 +309,6 @@ class Board:
             if not self._run_algorithm_for_encircled_defenders_recursion(next_square, checked_squares):
                 return False
         return True
-                    
-    
     
     def _check_for_2_pieces_of_team_next_to_square(self, square: tuple[int, int], team: str):
         "checks for 2 or more pieces of the passed team next to a passed square"
@@ -327,7 +329,19 @@ class Board:
 
 
     def _check_for_possible_moves(self):
-        pass                                
+        '''Checks to see if the team whose turn is about to start (ie "offense" if self.team = "defense"
+        has any pieces that can move) Returns True if there are legal moves. False if the team has no legal moves'''
+        match self.turn:
+            case "offense":
+                team = "defense"
+            case "defense":
+                team = "offense"
+        pieces = self.find_all_pieces_of_team(team)
+        for piece in pieces:
+            if self._find_valid_moves(piece):
+                return True
+        return False
+                         
                     
 
 
@@ -368,4 +382,4 @@ if __name__ == "__main__":
                 print(board)
             else:
                 print("That move is invalid. Please make a valid move")
-    print(f"Game Over. {board.victor} wins")
+    print(f"Game Over. {board.victor.capitalize()} wins.")
