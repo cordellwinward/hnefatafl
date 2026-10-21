@@ -205,7 +205,8 @@ def test_check_for_capture_corners():
     board.turn = "offense"
     board.board_state[0][1] = Piece("defense")
     board.board_state[0][2] = Piece("offense")
-    board.check_for_capture((0, 2))
+    captured_team = board.check_for_capture((0, 2))
+    assert captured_team == "defense"
     assert board.board_state[0][1] is None
     assert board.board_state[0][2].team == "offense"
 
@@ -213,7 +214,8 @@ def test_check_for_capture_corners():
     board.turn = "defense"
     board.board_state[0][9] = Piece("offense")
     board.board_state[0][8] = Piece("defense")
-    board.check_for_capture((0, 8))
+    captured_team = board.check_for_capture((0, 8))
+    assert captured_team == "offense"
     assert board.board_state[0][9] is None
 
 
@@ -221,14 +223,16 @@ def test_check_for_capture_corners():
     board.turn = "offense"
     board.board_state[10][1] = Piece("defense")
     board.board_state[10][2] = Piece("offense")
-    board.check_for_capture((10, 2))
+    captured_team = board.check_for_capture((10, 2))
+    assert captured_team == "defense"
     assert board.board_state[10][1] is None
     
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "defense"
     board.board_state[10][9] = Piece("offense")
     board.board_state[10][8] = Piece("defense")
-    board.check_for_capture((10, 8))
+    captured_team = board.check_for_capture((10, 8))
+    assert captured_team == "offense"
     assert board.board_state[10][9] is None
 
 def test_check_for_capture_edges():
@@ -240,7 +244,8 @@ def test_check_for_capture_edges():
     board.board_state[4][0] = Piece("defense")
     board.board_state[5][0] = Piece("offense")
     board.board_state[6][0] = Piece("defense")
-    board.check_for_capture((6, 0))
+    captured_team = board.check_for_capture((6, 0))
+    assert captured_team == "offense"
     assert board.board_state[5][0] is None
 
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -248,7 +253,8 @@ def test_check_for_capture_edges():
     board.board_state[0][4] = Piece("defense")
     board.board_state[0][5] = Piece("offense")
     board.board_state[0][6] = Piece("defense")
-    board.check_for_capture((0, 6))
+    captured_team = board.check_for_capture((0, 6))
+    assert captured_team == "offense"
     assert board.board_state[0][5] is None
     
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -256,7 +262,8 @@ def test_check_for_capture_edges():
     board.board_state[5][0] = Piece("defense")
     board.board_state[5][10] = Piece("offense")
     board.board_state[5][1] = Piece("offense")
-    board.check_for_capture((5, 1))
+    captured_team = board.check_for_capture((5, 1))
+    assert captured_team is None
     assert board.board_state[5][0].team == "defense"
     
 
@@ -264,7 +271,8 @@ def test_check_for_capture_edges():
     board.turn = "offense"
     board.board_state[5][10] = Piece("defense")
     board.board_state[5][9] = Piece("offense")
-    board.check_for_capture((5, 9))
+    captured_team = board.check_for_capture((5, 9))
+    assert captured_team is None
     assert board.board_state[5][10].team == "defense"
 
 def test_for_capture_throne():
@@ -276,7 +284,8 @@ def test_for_capture_throne():
     board.turn = "defense"
     board.board_state[5][6] = Piece("offense")
     board.board_state[5][7] = Piece("defense")
-    board.check_for_capture((5, 7))
+    captured_team = board.check_for_capture((5, 7))
+    assert captured_team == "offense"
     assert board.board_state[5][6] is None
 
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -284,7 +293,8 @@ def test_for_capture_throne():
     board.board_state[5][5] = Piece("defense", type="king")
     board.board_state[5][6] = Piece("defense")
     board.board_state[5][7] = Piece("offense")
-    board.check_for_capture((5, 7))
+    captured_team = board.check_for_capture((5, 7))
+    assert captured_team is None
     assert board.board_state[5][6].team == "defense"
 
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -292,7 +302,8 @@ def test_for_capture_throne():
     board.board_state[5][5] = Piece("defense", type="king")
     board.board_state[5][6] = Piece("offense")
     board.board_state[5][7] = Piece("defense")
-    board.check_for_capture((5, 7))
+    captured_team = board.check_for_capture((5, 7))
+    assert captured_team == "offense"
     assert board.board_state[5][6] is None
 
 def test_check_for_capture_special():
@@ -304,7 +315,8 @@ def test_check_for_capture_special():
     board.board_state[3][2] = Piece("offense")
     board.board_state[3][3] = Piece("defense", type="king")
     board.board_state[3][4] = Piece("offense")
-    board.check_for_capture((3, 4))
+    captured_team = board.check_for_capture((3, 4))
+    assert captured_team is None
     assert board.board_state[3][3].type == "king"
 
     #Multi-Capture
@@ -315,7 +327,8 @@ def test_check_for_capture_special():
     board.board_state[7][7] = Piece("offense")
     board.board_state[7][8] = Piece("defense")
     board.board_state[7][9] = Piece("offense")
-    board.check_for_capture((7, 7))
+    captured_team = board.check_for_capture((7, 7))
+    assert captured_team == "defense"
     assert board.board_state[6][7] is None
     assert board.board_state[7][8] is None
 
@@ -325,7 +338,8 @@ def test_check_for_capture_special():
     board.board_state[7][2] = Piece("defense")
     board.board_state[7][3] = Piece("offense")
     board.board_state[7][4] = Piece("defense")
-    board.check_for_capture((7, 3))
+    captured_team = board.check_for_capture((7, 3))
+    assert captured_team is None
     assert board.board_state[7][3].team == "offense"
 
     #Can't capture friendly pieces
@@ -334,7 +348,8 @@ def test_check_for_capture_special():
     board.board_state[7][2] = Piece("defense")
     board.board_state[7][3] = Piece("defense")
     board.board_state[7][4] = Piece("defense")
-    board.check_for_capture((7, 2))
+    captured_team = board.check_for_capture((7, 2))
+    assert captured_team is None
     assert board.board_state[7][3].team == "defense"
 
 def test_capture_king():

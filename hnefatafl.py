@@ -92,7 +92,7 @@ class Board:
             row_counter += 1
         return board
     
-    def translate_text_into_coordinate(self, coordinate_str: str):
+    def translate_text_into_coordinate(self, coordinate_str: str) -> tuple[int, int]:
         if len(coordinate_str.strip()) < 2:
             raise ValueError("Not a valid board square")
         column = coordinate_str.lower()[0]
@@ -106,7 +106,7 @@ class Board:
         column = self.VALID_COLUMNS.index(column)
         return (row, column)
         
-    def translate_coordinate_into_text(self, coordinate: tuple[int, int]):
+    def translate_coordinate_into_text(self, coordinate: tuple[int, int]) -> str:
         row, column = coordinate
         if (not 0 <= row <= 10) or (not 0 <= column <=10):
             raise ValueError("Invalid input")
@@ -124,7 +124,7 @@ class Board:
         
         
 
-    def _find_possible_paths(self, coordinate: tuple[int, int]):
+    def _find_possible_paths(self, coordinate: tuple[int, int]) -> list[tuple[int, int]]:
 
         '''Returns all squares in a unbroken path from 
         a coordinate including the throne and corner squares.'''
@@ -144,7 +144,7 @@ class Board:
                 square_around = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
         return possible_paths
 
-    def _find_valid_moves(self, coordinate: tuple[int, int]):
+    def _find_valid_moves(self, coordinate: tuple[int, int])-> list[tuple[int, int]] | None:
         '''Finds and returns all valid moves a square can make without validating whose turn it is'''
         board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
         if board_square is None:
@@ -165,8 +165,8 @@ class Board:
         piece = self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]]
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
-        self.check_for_capture(move_to)
-        self._check_for_game_end_conditions()
+        captured_pieces_team = self.check_for_capture(move_to)
+        self._check_for_game_end_conditions(captured_pieces_team)
         self.board_state_history.append(copy.deepcopy(self.board_state))
 
         #Change turns
@@ -177,7 +177,8 @@ class Board:
 
 
 
-    def check_for_capture(self, move_to: tuple[int, int]):
+    def check_for_capture(self, move_to: tuple[int, int]) -> str | None:
+        captured_team = None
         piece = self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]]
         for row, column in self.MOVEMENT_DIRECTIONS:
             square_around = ((move_to[self.BOARD_SQUARE_ROW_INX] + row), (move_to[self.BOARD_SQUARE_COLUMN_INX] + column))
@@ -202,8 +203,10 @@ class Board:
                         
                         case "standard":
                             self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] = None
+                            captured_team = square_around_piece.team
                         case "king":
                             self.capture_king(square_around)
+        return captured_team
 
     def capture_king(self, kings_square: tuple [int, int]):
         king_row, king_column = kings_square
@@ -225,9 +228,9 @@ class Board:
         
 
         
-    def _check_for_game_end_conditions(self):
+    def _check_for_game_end_conditions(self, captured_pieces_team: str | None):
         self._check_for_king_in_corner()
-        # self._check_for_encircled_defenders()
+        # self._check_for_encircled_defenders(captured_pieces_team)
         # self._check_for_possible_moves()
 
     def _check_for_king_in_corner(self):
@@ -243,13 +246,14 @@ class Board:
                         self.victor = "defense"
                         break
 
-    def _check_for_encircled_defenders(self):
+    def _check_for_encircled_defenders(self, captured_pieces_team: str | None):
         pass
 
     def _check_for_possible_moves(self):
         pass                                
                     
-
+    def find_all_pieces(self, team: str):
+        pass
 
 
 
