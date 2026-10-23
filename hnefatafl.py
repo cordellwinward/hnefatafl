@@ -5,28 +5,30 @@ class Piece:
     VALID_TYPES = ["standard", "king"]
     
 
-    def __init__(self, team: str, type: str ="standard"):
+    def __init__(self, team: str, piece_type: str = "standard") -> None:
+        """Creates a piece for the specified team and piece type."""
         self.team = team
-        self.type = type
+        self.piece_type = piece_type
 
         # prevents invalid pieces
         if team not in self.VALID_TEAMS:
             raise ValueError(f"Invalid team '{team}'. Expected one of {self.VALID_TEAMS}")
-        if type not in self.VALID_TYPES:
-            raise ValueError(f"Invalid piece type '{type}'. Expected one of {self.VALID_TYPES}")
-        if team == "offense" and type == "king":
+        if piece_type not in self.VALID_TYPES:
+            raise ValueError(f"Invalid piece type '{piece_type}'. Expected one of {self.VALID_TYPES}")
+        if team == "offense" and piece_type == "king":
             raise ValueError("Offense team cannot have a King piece.")
 
         
         #assigns text characters to pieces
         if self.team == "offense":
             self.character = "A"
-        elif self.team == "defense" and self.type == "standard":
+        elif self.team == "defense" and self.piece_type == "standard":
             self.character = "D"
-        elif self.team == "defense" and self.type == "king":
+        elif self.team == "defense" and self.piece_type == "king":
             self.character = "K"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Returns the character used to display the piece."""
         return self.character
 
 
@@ -42,12 +44,13 @@ class Board:
     THRONE_SQUARE = (5, 5)
     
     
-    def __init__(self):
-        self.turn = "offense"
-        self.game_over = False
-        self.victor = ""
-        #Maps the peices on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
-        self.init_board_state = [
+    def __init__(self) -> None:
+        """Creates a board in the initial Hnefatafl position."""
+        self.turn: str = "offense"
+        self.game_over: bool = False
+        self.victor: str = ""
+        #Maps the pieces on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
+        self.init_board_state: list[list[str]] = [
             [".", ".", ".", "A", "A", "A", "A", "A", ".", ".", "."],
             [".", ".", ".", ".", ".", "A", ".", ".", ".", ".", "."],
             [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
@@ -63,7 +66,7 @@ class Board:
         
 
         # Initializes piece classes into a 2D array as they appear on the board in the initial board position
-        self.board_state  = []
+        self.board_state: list[list[Piece | None]] = []
         for row in self.init_board_state:
             row_items = []
             for square in row:
@@ -76,9 +79,10 @@ class Board:
                 elif square == "K":
                     row_items.append(Piece("defense", "king"))
             self.board_state.append(row_items)
-        self.board_state_history = [copy.deepcopy(self.board_state)]
+        self.board_state_history: list[list[list[Piece | None]]] = [copy.deepcopy(self.board_state)]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Returns the board as a formatted text display."""
         # Turns the board into a text string that can be printed for easy development
         board = " A B C D E F G H I J K\n"
         row_counter = 1
@@ -93,6 +97,7 @@ class Board:
         return board
     
     def translate_text_into_coordinate(self, coordinate_str: str) -> tuple[int, int]:
+        """Converts a board coordinate such as 'A1' into a row-column tuple."""
         if len(coordinate_str.strip()) < 2:
             raise ValueError("Not a valid board square")
         column = coordinate_str.lower()[0]
@@ -107,6 +112,7 @@ class Board:
         return (row, column)
         
     def translate_coordinate_into_text(self, coordinate: tuple[int, int]) -> str:
+        """Converts a row-column tuple into a board coordinate such as 'A1'."""
         row, column = coordinate
         if (not 0 <= row <= 10) or (not 0 <= column <=10):
             raise ValueError("Invalid input")
@@ -117,6 +123,7 @@ class Board:
 
     
     def select_board_square(self, coordinate: tuple[int, int]) -> list[tuple[int, int]] | None:
+        """Returns the valid moves for the current team's piece at a square."""
         board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
         if board_square is None or board_square.team != self.turn:
             return None
@@ -126,8 +133,8 @@ class Board:
 
     def _find_possible_paths(self, coordinate: tuple[int, int]) -> list[tuple[int, int]]:
 
-        '''Returns all squares in a unbroken path from 
-        a coordinate including the throne and corner squares.'''
+        """Returns all squares in a unbroken path from
+        a coordinate including the throne and corner squares."""
 
         possible_paths = []
         for direction in self.MOVEMENT_DIRECTIONS:
@@ -135,22 +142,21 @@ class Board:
             square_around = (coordinate[self.BOARD_SQUARE_ROW_INX] + row, coordinate[self.BOARD_SQUARE_COLUMN_INX] + column)
 
             while (
-                (square_around[self.BOARD_SQUARE_ROW_INX] >= 0 and square_around[self.BOARD_SQUARE_ROW_INX] <= 10)
-                and (square_around[self.BOARD_SQUARE_COLUMN_INX] >= 0 
-                and square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10) 
-                and (self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] is None)
-                ):
+                0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10
+                and 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10
+                and self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] is None
+            ):
                 possible_paths.append(square_around)
                 square_around = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
         return possible_paths
 
     def _find_valid_moves(self, coordinate: tuple[int, int])-> list[tuple[int, int]] | None:
-        '''Finds and returns all valid moves a square can make without validating whose turn it is'''
+        """Finds and returns all valid moves a square can make without validating whose turn it is"""
         board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
         if board_square is None:
             return None
         valid_moves = self._find_possible_paths(coordinate)
-        if board_square.type == "standard":
+        if board_square.piece_type == "standard":
             if self.THRONE_SQUARE in valid_moves:
                 valid_moves.remove(self.THRONE_SQUARE)
             for corner in self.CORNER_SQUARES:
@@ -161,10 +167,17 @@ class Board:
         
 
 
-    def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]):
-        if not (0 <= move_from[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= move_from[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+    def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]) -> None:
+        """Moves a piece, updates board history, resolves captures, checks for game-ending conditions, and switches turns."""
+        if (
+            not 0 <= move_from[self.BOARD_SQUARE_ROW_INX] <= 10
+            or not 0 <= move_from[self.BOARD_SQUARE_COLUMN_INX] <= 10
+        ):
             raise ValueError("move_from is outside the board")
-        if not (0 <= move_to[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= move_to[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+        if (
+            not 0 <= move_to[self.BOARD_SQUARE_ROW_INX] <= 10
+            or not 0 <= move_to[self.BOARD_SQUARE_COLUMN_INX] <= 10
+        ):
             raise ValueError("move_to is outside the board")
         if self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] is None:
             raise ValueError("move_from does not contain a piece")
@@ -178,7 +191,7 @@ class Board:
         piece = self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]]
         self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] = None
         self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]] = piece
-        captured_pieces_team = self.check_for_capture(move_to)
+        captured_pieces_team = self._check_for_capture(move_to)
         self._check_for_game_end_conditions(move_to, captured_pieces_team)
         self.board_state_history.append(copy.deepcopy(self.board_state))
 
@@ -190,43 +203,58 @@ class Board:
 
 
 
-    def check_for_capture(self, move_to: tuple[int, int]) -> str | None:
+    def _check_for_capture(self, move_to: tuple[int, int]) -> str | None:
+        """Checks whether a move captured an opposing piece."""
         captured_team = None
         piece = self.board_state[move_to[self.BOARD_SQUARE_ROW_INX]][move_to[self.BOARD_SQUARE_COLUMN_INX]]
         for row, column in self.MOVEMENT_DIRECTIONS:
             square_around = ((move_to[self.BOARD_SQUARE_ROW_INX] + row), (move_to[self.BOARD_SQUARE_COLUMN_INX] + column))
-            if not (0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+            if (
+                not 0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10
+                or not 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10
+            ):
                 continue
             square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
             
             if square_around_piece is not None and square_around_piece.team != piece.team:
                 capturing_square = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
-                if not (0 <= capturing_square[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+                if (
+                    not 0 <= capturing_square[self.BOARD_SQUARE_ROW_INX] <= 10
+                    or not 0 <= capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= 10
+                ):
                     continue
-                capturing_square_piece = self.board_state[capturing_square[self.BOARD_SQUARE_ROW_INX]][capturing_square[self.BOARD_SQUARE_COLUMN_INX]] 
+                capturing_square_piece = self.board_state[capturing_square[self.BOARD_SQUARE_ROW_INX]][capturing_square[self.BOARD_SQUARE_COLUMN_INX]]
                 
-                if capturing_square_piece is None and capturing_square not in self.CORNER_SQUARES and capturing_square != self.THRONE_SQUARE:
+                if (
+                    capturing_square_piece is None
+                    and capturing_square not in self.CORNER_SQUARES
+                    and capturing_square != self.THRONE_SQUARE
+                ):
                     pass
                 elif (capturing_square in self.CORNER_SQUARES or
                     (capturing_square == self.THRONE_SQUARE and
                     self.board_state[self.THRONE_SQUARE[self.BOARD_SQUARE_ROW_INX]][self.THRONE_SQUARE[self.BOARD_SQUARE_COLUMN_INX]] is None) or
                     capturing_square_piece.team == piece.team):
                     
-                    match square_around_piece.type:
+                    match square_around_piece.piece_type:
                         
                         case "standard":
                             self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] = None
                             captured_team = square_around_piece.team
                         case "king":
-                            self.capture_king(square_around)
+                            self._capture_king(square_around)
         return captured_team
 
-    def capture_king(self, kings_square: tuple[int, int]):
+    def _capture_king(self, kings_square: tuple[int, int]) -> None:
+        """Checks whether the king is surrounded and ends the game if captured."""
         king_row, king_column = kings_square
         num_attacking_pieces = 0
         for row, column in self.MOVEMENT_DIRECTIONS:
             square_around = (king_row + row, king_column + column)
-            if not (0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10) or not (0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10):
+            if (
+                not 0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10
+                or not 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10
+            ):
                 break
             square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
             if (square_around == self.THRONE_SQUARE or
@@ -241,7 +269,12 @@ class Board:
         
 
         
-    def _check_for_game_end_conditions(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
+    def _check_for_game_end_conditions(
+        self,
+        moved_to_square: tuple[int, int],
+        captured_pieces_team: str | None,
+    ) -> None:
+        """Checks whether the latest move ended the game."""
         if not self._check_for_possible_moves():
             self.game_over = True
             self.victor = self.turn
@@ -254,8 +287,8 @@ class Board:
                 self.game_over = True
                 self.victor = "defense"
 
-    def _check_for_king_in_corner(self):
-        "Checks to see if the King escaped the board to the corner. Returns True if the king is on a corner square. False otherwise."
+    def _check_for_king_in_corner(self) -> bool:
+        """Checks to see if the King escaped the board to the corner. Returns True if the king is on a corner square. False otherwise."""
         match self.turn:
             case "offense":
                 return False
@@ -268,6 +301,7 @@ class Board:
                 return False
 
     def find_all_pieces_of_team(self, team: str) -> list[tuple[int, int]]:
+        """Returns the board coordinates of every piece on a team."""
         piece_locations = []
         row_inx = 0
         for row in self.board_state:
@@ -279,14 +313,19 @@ class Board:
             row_inx += 1
         return piece_locations
     
-    def _check_for_encircled_defenders(self, moved_to_square: tuple[int, int], captured_pieces_team: str | None):
+    def _check_for_encircled_defenders(
+        self,
+        moved_to_square: tuple[int, int],
+        captured_pieces_team: str | None,
+    ) -> bool:
+        """Checks whether the defenders have been completely encircled."""
         if (captured_pieces_team == "defense" 
         or self._check_for_2_pieces_of_team_next_to_square(moved_to_square, "defense")):
             return self._run_algorithm_for_encircled_defenders()
         return False
         
     def _run_algorithm_for_encircled_defenders(self) -> bool:
-        "Runs full algorithm to check if defenders completely encircled. Returns False if defenders not completely encircled. True if they are."
+        """Runs full algorithm to check if defenders completely encircled. Returns False if defenders not completely encircled. True if they are."""
         defensive_squares = self.find_all_pieces_of_team("defense")
         checked_squares = set()
         for square in defensive_squares:
@@ -297,7 +336,12 @@ class Board:
                 return False
         return True
 
-    def _run_algorithm_for_encircled_defenders_recursion(self, square, checked_squares):
+    def _run_algorithm_for_encircled_defenders_recursion(
+        self,
+        square: tuple[int, int],
+        checked_squares: set[tuple[int, int]],
+    ) -> bool:
+        """Checks recursively whether defenders can reach an unencircled square."""
         possible_paths = self._find_possible_paths(square)
         for next_square in possible_paths:
             if next_square in checked_squares:
@@ -310,8 +354,12 @@ class Board:
                 return False
         return True
     
-    def _check_for_2_pieces_of_team_next_to_square(self, square: tuple[int, int], team: str):
-        "checks for 2 or more pieces of the passed team next to a passed square"
+    def _check_for_2_pieces_of_team_next_to_square(
+        self,
+        square: tuple[int, int],
+        team: str,
+    ) -> bool:
+        """Checks for 2 or more pieces of the passed team next to a passed square."""
         row, column = square
         num_of_adjacent_pieces = 0
         for adjacent_row, adjacent_column in self.ALL_ADJACENT_SQUARES:
@@ -328,9 +376,8 @@ class Board:
             return False
 
 
-    def _check_for_possible_moves(self):
-        '''Checks to see if the team whose turn is about to start (ie "offense" if self.team = "defense"
-        has any pieces that can move) Returns True if there are legal moves. False if the team has no legal moves'''
+    def _check_for_possible_moves(self) -> bool:
+        """Checks whether the next team has any legal moves."""
         match self.turn:
             case "offense":
                 team = "defense"
