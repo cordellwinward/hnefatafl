@@ -11,7 +11,7 @@ All pieces move orthogonally across unobstructed paths, capturing opposing piece
 
 ## Tech Stack
 * **Core Language:** Python 3
-* **Testing** Pytest
+* **Testing:** Pytest
 * **Graphical Interface (Planned):** Pygame
 * **Future Stack:** SQL, HTML, CSS, JavaScript (for planned web version)
 
@@ -33,13 +33,16 @@ The system is built around an Object-Oriented paradigm with two core entities:
 * **CLI Rendering:** Terminal grid display using object string representations.
 * **Coordinate Conversion:** Conversion between text coordinates such as `A1` and zero-based board coordinates.
 * **Move Selection:** Selection of orthogonal, unobstructed destinations for the current team's pieces, including restrictions for standard pieces on corner and throne squares.
-* **Piece Movement:** Pieces can be moved between valid board squares, turns alternate between offense and defense, and previous board states are tracked.
-* **Partial Capture Detection:** Standard opposing pieces can be removed through supported Custodian Capture situations.
+* **Piece Movement:** Pieces can be moved between valid board squares with coordinate, occupancy, turn, and move validation. Turns alternate between offense and defense, and previous board states are tracked.
+* **Capture Detection:** Standard opposing pieces can be removed through Custodian Capture, including captures involving corners and the throne.
+* **King Rules:** The King can be captured when surrounded, and the defense wins when the King reaches a corner.
+* **Game-End Detection:** The game ends when standard or special game-ending rules are met, including captures, encirclement (when the defending pieces have no open path to the board edge), a team having no legal moves at the beginning of its turn, and 50 complete turns without a capture.
 
 ### Current Limitations (In Progress)
-* **Move Execution Validation:** `move_piece` does not independently validate that its source and destination coordinates represent a legal move; callers should use the move-selection logic first.
-* **Incomplete Rules Engine:** King capture, King escape, and game-over/victor state handling are not yet implemented.
-* **No Graphical UI:** Gameplay is currently restricted to terminal output while Pygame interface is under development.
+* **No Graphical UI:** Gameplay is currently restricted to the development CLI.
+* **No Computer Gameplay:** Players cannot currently play against a computer in a single-player format.
+* **No Undo Feature:** Moves are stored in board history, but restoring a previous board state is not yet supported.
+* **Variant Rules:** Special rules from some Hnefatafl variants are not currently supported.
 
 ---
 

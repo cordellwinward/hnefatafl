@@ -248,6 +248,24 @@ def test_move_piece_integration():
     assert not board.game_over
     assert board.victor == ""
 
+    # Verify that 50 complete turns without a capture end in a draw.
+    board = Board()
+    board.board_state = [[None] * 11 for _ in range(11)]
+    board.turn = "offense"
+    board.board_state[0][2] = Piece("offense")
+    board.board_state[10][2] = Piece("defense")
+    board.board_state[5][5] = Piece("defense", piece_type="king")
+
+    for _ in range(25):
+        board.move_piece((0, 2), (0, 1))
+        board.move_piece((10, 2), (10, 1))
+        board.move_piece((0, 1), (0, 2))
+        board.move_piece((10, 1), (10, 2))
+
+    assert board.turns_without_capture == 100
+    assert board.game_over is True
+    assert board.victor == "draw"
+
     # Verify that moving the king to a corner ends the game for defense.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -290,6 +308,33 @@ def test_move_piece_integration():
 
     assert board.game_over
     assert board.victor == "offense"
+
+
+def test_check_for_50_turns_without_capture_increments_without_capture():
+    board = Board()
+
+    assert board.turns_without_capture == 0
+    assert board._check_for_50_turns_without_capture(None) is False
+    assert board.turns_without_capture == 1
+
+
+def test_check_for_50_turns_without_capture_resets_after_capture():
+    board = Board()
+    board.turns_without_capture = 25
+
+    assert board._check_for_50_turns_without_capture("offense") is False
+    assert board.turns_without_capture == 0
+
+
+def test_check_for_50_turns_without_capture_returns_true_at_100_moves():
+    board = Board()
+
+    for _ in range(99):
+        assert board._check_for_50_turns_without_capture(None) is False
+
+    assert board.turns_without_capture == 99
+    assert board._check_for_50_turns_without_capture(None) is True
+    assert board.turns_without_capture == 100
 
 
 def test_check_for_capture_corners():

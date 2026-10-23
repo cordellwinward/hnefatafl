@@ -42,6 +42,7 @@ class Board:
     ALL_ADJACENT_SQUARES = [(0, -1), (0, 1), (-1, 0), (1, 0), (1, 1), (-1, 1), (1, -1), (-1, -1)]
     CORNER_SQUARES = [(0, 0), (0, 10), (10, 0), (10, 10)]
     THRONE_SQUARE = (5, 5)
+    BOARD_MAX_INDEX = 10 # For an 11x11 board including index 0
     
     
     def __init__(self) -> None:
@@ -49,6 +50,8 @@ class Board:
         self.turn: str = "offense"
         self.game_over: bool = False
         self.victor: str = ""
+        self.turns_without_capture: int = 0
+
         #Maps the pieces on the board in a list. A = Offensive Piece, D = Defensive Piece, K = King Piece
         self.init_board_state: list[list[str]] = [
             [".", ".", ".", "A", "A", "A", "A", "A", ".", ".", "."],
@@ -114,7 +117,7 @@ class Board:
     def translate_coordinate_into_text(self, coordinate: tuple[int, int]) -> str:
         """Converts a row-column tuple into a board coordinate such as 'A1'."""
         row, column = coordinate
-        if (not 0 <= row <= 10) or (not 0 <= column <=10):
+        if (not 0 <= row <= self.BOARD_MAX_INDEX) or (not 0 <= column <= self.BOARD_MAX_INDEX):
             raise ValueError("Invalid input")
         row = row + 1
         column = self.VALID_COLUMNS[column]
@@ -142,8 +145,8 @@ class Board:
             square_around = (coordinate[self.BOARD_SQUARE_ROW_INX] + row, coordinate[self.BOARD_SQUARE_COLUMN_INX] + column)
 
             while (
-                0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10
-                and 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10
+                0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= self.BOARD_MAX_INDEX
+                and 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= self.BOARD_MAX_INDEX
                 and self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]] is None
             ):
                 possible_paths.append(square_around)
@@ -170,13 +173,13 @@ class Board:
     def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]) -> None:
         """Moves a piece, updates board history, resolves captures, checks for game-ending conditions, and switches turns."""
         if (
-            not 0 <= move_from[self.BOARD_SQUARE_ROW_INX] <= 10
-            or not 0 <= move_from[self.BOARD_SQUARE_COLUMN_INX] <= 10
+            not 0 <= move_from[self.BOARD_SQUARE_ROW_INX] <= self.BOARD_MAX_INDEX
+            or not 0 <= move_from[self.BOARD_SQUARE_COLUMN_INX] <= self.BOARD_MAX_INDEX
         ):
             raise ValueError("move_from is outside the board")
         if (
-            not 0 <= move_to[self.BOARD_SQUARE_ROW_INX] <= 10
-            or not 0 <= move_to[self.BOARD_SQUARE_COLUMN_INX] <= 10
+            not 0 <= move_to[self.BOARD_SQUARE_ROW_INX] <= self.BOARD_MAX_INDEX
+            or not 0 <= move_to[self.BOARD_SQUARE_COLUMN_INX] <= self.BOARD_MAX_INDEX
         ):
             raise ValueError("move_to is outside the board")
         if self.board_state[move_from[self.BOARD_SQUARE_ROW_INX]][move_from[self.BOARD_SQUARE_COLUMN_INX]] is None:
@@ -210,8 +213,8 @@ class Board:
         for row, column in self.MOVEMENT_DIRECTIONS:
             square_around = ((move_to[self.BOARD_SQUARE_ROW_INX] + row), (move_to[self.BOARD_SQUARE_COLUMN_INX] + column))
             if (
-                not 0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10
-                or not 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10
+                not 0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= self.BOARD_MAX_INDEX
+                or not 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= self.BOARD_MAX_INDEX
             ):
                 continue
             square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
@@ -219,8 +222,8 @@ class Board:
             if square_around_piece is not None and square_around_piece.team != piece.team:
                 capturing_square = (square_around[self.BOARD_SQUARE_ROW_INX] + row, square_around[self.BOARD_SQUARE_COLUMN_INX] + column)
                 if (
-                    not 0 <= capturing_square[self.BOARD_SQUARE_ROW_INX] <= 10
-                    or not 0 <= capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= 10
+                    not 0 <= capturing_square[self.BOARD_SQUARE_ROW_INX] <= self.BOARD_MAX_INDEX
+                    or not 0 <= capturing_square[self.BOARD_SQUARE_COLUMN_INX] <= self.BOARD_MAX_INDEX
                 ):
                     continue
                 capturing_square_piece = self.board_state[capturing_square[self.BOARD_SQUARE_ROW_INX]][capturing_square[self.BOARD_SQUARE_COLUMN_INX]]
@@ -252,8 +255,8 @@ class Board:
         for row, column in self.MOVEMENT_DIRECTIONS:
             square_around = (king_row + row, king_column + column)
             if (
-                not 0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= 10
-                or not 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= 10
+                not 0 <= square_around[self.BOARD_SQUARE_ROW_INX] <= self.BOARD_MAX_INDEX
+                or not 0 <= square_around[self.BOARD_SQUARE_COLUMN_INX] <= self.BOARD_MAX_INDEX
             ):
                 break
             square_around_piece = self.board_state[square_around[self.BOARD_SQUARE_ROW_INX]][square_around[self.BOARD_SQUARE_COLUMN_INX]]
@@ -275,6 +278,9 @@ class Board:
         captured_pieces_team: str | None,
     ) -> None:
         """Checks whether the latest move ended the game."""
+        if self._check_for_50_turns_without_capture(captured_pieces_team):
+            self.game_over = True
+            self.victor = "draw"
         if not self._check_for_possible_moves():
             self.game_over = True
             self.victor = self.turn
@@ -286,6 +292,18 @@ class Board:
             if self._check_for_king_in_corner():
                 self.game_over = True
                 self.victor = "defense"
+
+    def _check_for_50_turns_without_capture(self, captured_piece_team: str | None) -> bool:
+        """Checks to see if 50 complete turns (1 turn for offense, 1 for defense) have occurred
+        without any captures. If so returns True. Otherwise returns False"""
+        if captured_piece_team == "offense" or captured_piece_team == "defense":
+            self.turns_without_capture = 0
+        elif captured_piece_team is None:
+            self.turns_without_capture += 1
+        if self.turns_without_capture >= 100:
+            return True
+        else:
+            return False
 
     def _check_for_king_in_corner(self) -> bool:
         """Checks to see if the King escaped the board to the corner. Returns True if the king is on a corner square. False otherwise."""
@@ -330,7 +348,7 @@ class Board:
         checked_squares = set()
         for square in defensive_squares:
             row, column = square
-            if row in [10, 0] or column in [10, 0]:
+            if row in [self.BOARD_MAX_INDEX, 0] or column in [self.BOARD_MAX_INDEX, 0]:
                 return False
             if not self._run_algorithm_for_encircled_defenders_recursion(square,checked_squares):
                 return False
@@ -348,7 +366,7 @@ class Board:
                 continue
             checked_squares.add(next_square)
             row, column = next_square
-            if row in [10, 0] or column in [10, 0]:
+            if row in [self.BOARD_MAX_INDEX, 0] or column in [self.BOARD_MAX_INDEX, 0]:
                 return False
             if not self._run_algorithm_for_encircled_defenders_recursion(next_square, checked_squares):
                 return False
@@ -365,7 +383,7 @@ class Board:
         for adjacent_row, adjacent_column in self.ALL_ADJACENT_SQUARES:
             adjacent_row += row
             adjacent_column += column
-            if not (0 <= adjacent_row <= 10) or not (0 <= adjacent_column <= 10):
+            if not (0 <= adjacent_row <= self.BOARD_MAX_INDEX) or not (0 <= adjacent_column <= self.BOARD_MAX_INDEX):
                 continue
             if (self.board_state[adjacent_row][adjacent_column] is not None
                 and self.board_state[adjacent_row][adjacent_column].team == team):
