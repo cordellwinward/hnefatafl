@@ -25,3 +25,5 @@ ENV/
 # OS Generated files
 .DS_Store
 Thumbs.db
+
+PyGameNotes.md
