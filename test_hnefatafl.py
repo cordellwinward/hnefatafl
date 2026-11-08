@@ -775,5 +775,13 @@ def test_check_for_possible_moves():
     assert board._check_for_possible_moves() is False
 
 
+def test_get_board_square_value():
+    board = Board()
+
+    assert board.getBoardSquareValue((0, 0)) is None
+    assert board.getBoardSquareValue((0, 3)) == ("offense", "standard")
+    assert board.getBoardSquareValue((5, 5)) == ("defense", "king")
+
+
 if __name__ == "__main__":
     pytest.main(["-v", "--tb=line", "-rN", __file__])

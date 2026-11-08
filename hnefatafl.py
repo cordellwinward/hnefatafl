@@ -406,7 +406,19 @@ class Board:
             if self._find_valid_moves(piece):
                 return True
         return False
-                         
+    def getBoardSquareValue(self, square: tuple[int, int]) -> tuple[str, str] | None:
+        """Takes the grid location of a square as a tuple (row, column).
+        Valid range for both row grid values are integers 0-10.
+        Returns None if no piece is on the square. 
+        Returns the pieces team and type in a tuple if a piece is present(team, type)
+        """
+        row, column = square
+        square = self.board_state[row][column]
+        if square == None:
+            return None
+        else:
+            return (square.team, square.piece_type)
+
                     
 
 

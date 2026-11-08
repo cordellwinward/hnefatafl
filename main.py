@@ -7,7 +7,7 @@ def main():
     clock = pygame.time.Clock()
 
     while gameGUI.running == True:
-        pygame.event.get()
+        gameGUI.process_events(pygame.event.get())
         gameGUI.draw_window()
         clock.tick(60)
 
