@@ -783,5 +783,16 @@ def test_get_board_square_value():
     assert board.getBoardSquareValue((5, 5)) == ("defense", "king")
 
 
+def test_get_game_over():
+    board = Board()
+
+    assert board.getGameOver() == (False, None)
+
+    board.game_over = True
+    board.victor = "offense"
+
+    assert board.getGameOver() == (True, "offense")
+
+
 if __name__ == "__main__":
     pytest.main(["-v", "--tb=line", "-rN", __file__])

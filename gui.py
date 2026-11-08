@@ -3,14 +3,15 @@ import pygame
 import pygame_gui
 
 class GameGUI:
-    SQUARE = 50
-    PIECE_SQUARE_RATIO = 0.8
-    PIECE_IMAGE_SIZE = int(SQUARE * PIECE_SQUARE_RATIO)
+    SQUARE_SIZE = 50
+    PIECE_SQUARE_RATIO = 0.9
+    MARGIN = 10
+    PIECE_IMAGE_SIZE = int(SQUARE_SIZE * PIECE_SQUARE_RATIO)
     BOARD_IMAGE_SIZE = 705
-    WIDTH = BOARD_IMAGE_SIZE
     PANEL_HEIGHT = 100
-    HEIGHT = BOARD_IMAGE_SIZE + (PANEL_HEIGHT * 2)
-    LEFT_GRID_OFFSET = 78
+    WIDTH = BOARD_IMAGE_SIZE + (MARGIN * 2)
+    HEIGHT = BOARD_IMAGE_SIZE + (PANEL_HEIGHT * 2) + (MARGIN * 2)
+    LEFT_GRID_OFFSET = 78 + MARGIN
     TOP_GRID_OFFSET = PANEL_HEIGHT + LEFT_GRID_OFFSET
     def __init__(self):
         self.game_board = Board()
@@ -42,7 +43,7 @@ class GameGUI:
         
 
     def draw_window(self) -> None:
-        self.window.fill((74, 58, 60))
+        self.window.fill((70, 0, 13))
         self._draw_canvas()
         width, height = self.window.get_size()
         self.canvas_scale = min(width / self.WIDTH, height / self.HEIGHT)
@@ -52,8 +53,26 @@ class GameGUI:
         pygame.display.flip()
 
     def _draw_canvas(self) -> None:
-        self.canvas.fill((95, 181, 214))
-        self.canvas.blit(self.board_image, (0, self.PANEL_HEIGHT))
+        self.canvas.fill((36, 86, 127))
+        self.canvas.blit(self.board_image, (self.MARGIN, self.PANEL_HEIGHT + self.MARGIN))
+        for row in range(0, 11):
+            for column in range(0, 11):
+                value = self.game_engine.getBoardSquareValue((row, column))
+                match value:
+                    case None:
+                        continue
+                    case ("defense", "standard"):
+                        self.canvas.blit(self.defense_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
+                    case ("defense", "king"):
+                        self.canvas.blit(self.king_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
+                    case ("offense", "standard"):
+                        self.canvas.blit(self.offense_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
+    def _convert_piece_image_grid_to_pixels(self, square: tuple[int, int]) -> tuple[int, int]:
+        row, column = square
+        row = int((row * self.SQUARE_SIZE) + self.LEFT_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
+        column = int((column * self.SQUARE_SIZE) + self.TOP_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
+        return (row, column)
+
 
     def process_events(self, events: list[pygame.event.Event]) -> None:
         for event in events:
@@ -64,7 +83,7 @@ class GameGUI:
     def _handle_click(self, click_position: tuple[int, int]) -> None:
         pass
 
-    def _convert_click_location_into_square_clicked(self) -> tuple(int, int):
+    def _convert_click_location_into_square_clicked(self) -> tuple[int, int]:
         pass
 
 
