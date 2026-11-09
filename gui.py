@@ -8,7 +8,7 @@ class GameGUI:
     MARGIN = 10
     PIECE_IMAGE_SIZE = int(SQUARE_SIZE * PIECE_SQUARE_RATIO)
     BOARD_IMAGE_SIZE = 705
-    PANEL_HEIGHT = 100
+    PANEL_HEIGHT = 90
     WIDTH = BOARD_IMAGE_SIZE + (MARGIN * 2)
     HEIGHT = BOARD_IMAGE_SIZE + (PANEL_HEIGHT * 2) + (MARGIN * 2)
     LEFT_GRID_OFFSET = 78 + MARGIN
@@ -57,7 +57,7 @@ class GameGUI:
         self.canvas.blit(self.board_image, (self.MARGIN, self.PANEL_HEIGHT + self.MARGIN))
         for row in range(0, 11):
             for column in range(0, 11):
-                value = self.game_engine.getBoardSquareValue((row, column))
+                value = self.game_engine.get_board_square_value((row, column))
                 match value:
                     case None:
                         continue
@@ -85,6 +85,10 @@ class GameGUI:
 
     def _convert_click_location_into_square_clicked(self) -> tuple[int, int]:
         pass
+
+    def get_program_active(self) -> bool:
+        return self.running
+
 
 
         

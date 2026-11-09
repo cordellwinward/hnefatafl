@@ -407,7 +407,7 @@ class Board:
                 return True
         return False
     
-    def getBoardSquareValue(self, square: tuple[int, int]) -> tuple[str, str] | None:
+    def get_board_square_value(self, square: tuple[int, int]) -> tuple[str, str] | None:
         """Takes the grid location of a square as a tuple (row, column).
         Valid range for both row grid values are integers 0-10.
         Returns None if no piece is on the square. 
@@ -420,10 +420,10 @@ class Board:
         else:
             return (square.team, square.piece_type)
 
-    def getBoardTurn(self) -> str:
+    def get_board_turn(self) -> str:
         """Returns which teams turn it is"""
         return self.turn
-    def getGameOver(self) -> tuple[bool, str] | tuple[bool, None]:
+    def get_game_over(self) -> tuple[bool, str] | tuple[bool, None]:
         """
         Returns if the game is over and who won in the format (game_over, winner).
         If the game is not over, winner will be None

@@ -778,20 +778,20 @@ def test_check_for_possible_moves():
 def test_get_board_square_value():
     board = Board()
 
-    assert board.getBoardSquareValue((0, 0)) is None
-    assert board.getBoardSquareValue((0, 3)) == ("offense", "standard")
-    assert board.getBoardSquareValue((5, 5)) == ("defense", "king")
+    assert board.get_board_square_value((0, 0)) is None
+    assert board.get_board_square_value((0, 3)) == ("offense", "standard")
+    assert board.get_board_square_value((5, 5)) == ("defense", "king")
 
 
 def test_get_game_over():
     board = Board()
 
-    assert board.getGameOver() == (False, None)
+    assert board.get_game_over() == (False, None)
 
     board.game_over = True
     board.victor = "offense"
 
-    assert board.getGameOver() == (True, "offense")
+    assert board.get_game_over() == (True, "offense")
 
 
 if __name__ == "__main__":
