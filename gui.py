@@ -17,7 +17,6 @@ class GameGUI:
     TOP_GRID_OFFSET = TOP_PANEL_HEIGHT + LEFT_GRID_OFFSET
 
     def __init__(self):
-        self.game_board = Board()
         pygame.init()
 
         #SET DIMENSIONS AND SCALE OF MAJOR SURFACE OBJECTS
@@ -51,8 +50,7 @@ class GameGUI:
         self.day_roman_20pt = pygame.font.Font("graphicsArtifacts/fonts/DayRoman/DAYROM__.ttf")
 
         # TITLE BANNER
-        self.hnefatafl_banner = self.title_font.render(
-        "hnefatafl", True, (225, 45, 75))
+        self.hnefatafl_banner = self.title_font.render("hnefatafl", True, (225, 45, 75))
         self.hnefatafl_banner_shadow = self.title_font.render("hnefatafl", True, (95, 5, 26))
 
         # Turn Text
@@ -60,15 +58,14 @@ class GameGUI:
         self.offense_turn_display = self.day_roman_20pt.render("OFFENSE TO MOVE", True, (232, 198, 112))
 
         #gold line decoration surface
-        self.decorative_line = pygame.Surface((
-            (self.hnefatafl_banner.get_width() - 10), 2
-            ))
+        self.decorative_line = pygame.Surface(((self.hnefatafl_banner.get_width() - 10), 2))
         self.decorative_line.fill((212, 168, 68))
 
 
         # RELEVANT BOARD ENGINE RELATED VARIABLES
         self.game_engine = Board()
         self.square_selected = None
+        self.square_selected_valid_moves = []
         
 
     def draw_window(self) -> None:
@@ -88,11 +85,11 @@ class GameGUI:
 
         # Draw title banner
         self.canvas.blit(self.hnefatafl_banner_shadow, 
-        ((((self.WIDTH - self.hnefatafl_banner_shadow.get_width()) // 2) + 4),
-        self.MARGIN + 4))
+            ((((self.WIDTH - self.hnefatafl_banner_shadow.get_width()) // 2) + 4),
+            self.MARGIN + 4))
         self.canvas.blit(self.hnefatafl_banner, 
-        (((self.WIDTH - self.hnefatafl_banner.get_width()) // 2),
-        self.MARGIN))
+            (((self.WIDTH - self.hnefatafl_banner.get_width()) // 2),
+            self.MARGIN))
 
         #Render turn text and gold decoration
         self._draw_turn_text()
@@ -131,10 +128,10 @@ class GameGUI:
 
 
     def _convert_piece_image_grid_to_pixels(self, square: tuple[int, int]) -> tuple[int, int]:
-        row, column = square
-        row = int((row * self.SQUARE_SIZE) + self.LEFT_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
-        column = int((column * self.SQUARE_SIZE) + self.TOP_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
-        return (row, column)
+        y, x = square
+        x = int((x * self.SQUARE_SIZE) + self.LEFT_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
+        y = int((y * self.SQUARE_SIZE) + self.TOP_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
+        return (x, y)
 
 
     def process_events(self, events: list[pygame.event.Event]) -> None:
@@ -143,11 +140,61 @@ class GameGUI:
                 self.running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._handle_click(event.pos)
+                
     def _handle_click(self, click_position: tuple[int, int]) -> None:
-        pass
+        x, y = click_position
+        x = int((x - self.canvas_offset[0]) // self.canvas_scale)
+        y = int((y - self.canvas_offset[1]) // self.canvas_scale)
+        relative_click_position = (x, y)
+        x -= self.LEFT_GRID_OFFSET
+        y -= self.TOP_GRID_OFFSET
 
-    def _convert_click_location_into_square_clicked(self) -> tuple[int, int]:
-        pass
+        if 0 <= x < (self.SQUARE_SIZE * 11) and 0 <= y < (self.SQUARE_SIZE * 11):
+            self._handle_board_grid_click((x, y))
+
+
+    def _handle_board_grid_click(self, board_pixel_coordinate: tuple[int, int]) -> None:
+        """Takes the grid position of a click inside the board area in pixels (x, y). 
+            0px is considered to be the left edge of the leftmost square and the top edge of the top square.
+            Uses those pixel coordinates to properly handles how it affects the game engine 
+            and the class variable self.square_selected."""
+        column, row = board_pixel_coordinate
+        row = row // self.SQUARE_SIZE
+        column = column // self.SQUARE_SIZE
+        if (0 <= row <= 10) and (0 <= column <= 10):
+            board_coordinate = (row, column)
+            if self.square_selected == board_coordinate:
+                self.square_selected = None
+                self.square_selected_valid_moves = []
+            elif self.square_selected == None:
+                self._select_square(board_coordinate)
+            elif self.square_selected != board_coordinate:
+                self._make_move(board_coordinate)
+        else:
+            #Add error case: something happened so your passing a board coordinate out of range
+            pass
+
+    def _select_square(self, board_coordinate: tuple[int, int]) -> None:
+        valid_moves = self.game_engine.select_board_square(board_coordinate)
+        if valid_moves == None:
+            #Add error case: Not your piece selected
+            pass
+        elif valid_moves == []:
+            #Add error case: This piece has no valid moves
+            pass
+        elif len(valid_moves) >= 1:
+            self.square_selected_valid_moves = valid_moves
+            self.square_selected = board_coordinate
+
+
+    def _make_move(self, board_coordinate: tuple[int, int]) -> None:
+        if board_coordinate in self.square_selected_valid_moves:
+            self.game_engine.move_piece(self.square_selected, board_coordinate)
+            self.square_selected = None
+            self.square_selected_valid_moves = []
+        else:
+            # Handle error case: this piece can't move here.
+            pass
 
     def get_program_active(self) -> bool:
         return self.running
