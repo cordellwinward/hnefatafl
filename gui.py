@@ -9,8 +9,8 @@ class GameGUI:
     MARGIN = 10
     PIECE_IMAGE_SIZE = int(SQUARE_SIZE * PIECE_SQUARE_RATIO)
     BOARD_IMAGE_SIZE = 705
-    TOP_PANEL_HEIGHT = 130
-    BOTTOM_PANEL_HEIGHT = 40
+    TOP_PANEL_HEIGHT = 140
+    BOTTOM_PANEL_HEIGHT = 30
     WIDTH = BOARD_IMAGE_SIZE + (MARGIN * 2)
     HEIGHT = BOARD_IMAGE_SIZE + (TOP_PANEL_HEIGHT + BOTTOM_PANEL_HEIGHT) + (MARGIN * 2)
     LEFT_GRID_OFFSET = 78 + MARGIN
@@ -47,13 +47,23 @@ class GameGUI:
         )
         # TEXT SURFACES
         # CREATE FONT OBJECTS
-        self.title_font = pygame.font.Font("graphicsArtifacts/fonts/celtica/Celtica-Bold.ttf", size=75)
+        self.title_font = pygame.font.Font("graphicsArtifacts/fonts/celtica/Celtica-Bold.ttf", size=70)
         self.day_roman_20pt = pygame.font.Font("graphicsArtifacts/fonts/DayRoman/DAYROM__.ttf")
 
         # TITLE BANNER
-        self.hnefatafl_banner = self.title_font.render("hnefatafl", True, (225, 45, 75))
+        self.hnefatafl_banner = self.title_font.render(
+        "hnefatafl", True, (225, 45, 75))
         self.hnefatafl_banner_shadow = self.title_font.render("hnefatafl", True, (95, 5, 26))
-        # (70, 0, 13)
+
+        # Turn Text
+        self.defense_turn_display = self.day_roman_20pt.render("DEFENSE TO MOVE", True, (232, 198, 112))
+        self.offense_turn_display = self.day_roman_20pt.render("OFFENSE TO MOVE", True, (232, 198, 112))
+
+        #gold line decoration surface
+        self.decorative_line = pygame.Surface((
+            (self.hnefatafl_banner.get_width() - 10), 2
+            ))
+        self.decorative_line.fill((212, 168, 68))
 
 
         # RELEVANT BOARD ENGINE RELATED VARIABLES
@@ -72,15 +82,38 @@ class GameGUI:
         pygame.display.flip()
 
     def _draw_canvas(self) -> None:
-        self.canvas.fill((28, 44, 62)) # original color (36, 86, 127)
+        # Fill board Background colors and display board
+        self.canvas.fill((28, 44, 62)) 
         self.canvas.blit(self.board_image, (self.MARGIN, self.TOP_PANEL_HEIGHT + self.MARGIN))
-        
+
+        # Draw title banner
         self.canvas.blit(self.hnefatafl_banner_shadow, 
         ((((self.WIDTH - self.hnefatafl_banner_shadow.get_width()) // 2) + 4),
         self.MARGIN + 4))
         self.canvas.blit(self.hnefatafl_banner, 
         (((self.WIDTH - self.hnefatafl_banner.get_width()) // 2),
         self.MARGIN))
+
+        #Render turn text and gold decoration
+        self._draw_turn_text()
+        self.canvas.blit(self.decorative_line, ((self.WIDTH - self.decorative_line.get_width()) // 2,
+            self.MARGIN + self.hnefatafl_banner_shadow.get_height() + self.defense_turn_display.get_height() + 4))
+
+        # Render Pieces on Board
+        self._draw_pieces_on_board()
+
+    def _draw_turn_text(self):
+        turn = self.game_engine.get_board_turn()
+        match turn:
+            case "defense":
+                self.canvas.blit(self.defense_turn_display, (
+                    (self.WIDTH - self.defense_turn_display.get_width()) // 2,
+                    self.MARGIN + self.hnefatafl_banner_shadow.get_height()))
+            case "offense":
+                self.canvas.blit(self.offense_turn_display, (
+                    (self.WIDTH - self.offense_turn_display.get_width()) // 2,
+                    self.MARGIN + self.hnefatafl_banner_shadow.get_height()))
+    def _draw_pieces_on_board(self):
         for row in range(0, 11):
             for column in range(0, 11):
                 value = self.game_engine.get_board_square_value((row, column))
@@ -93,6 +126,10 @@ class GameGUI:
                         self.canvas.blit(self.king_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
                     case ("offense", "standard"):
                         self.canvas.blit(self.offense_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
+
+                
+
+
     def _convert_piece_image_grid_to_pixels(self, square: tuple[int, int]) -> tuple[int, int]:
         row, column = square
         row = int((row * self.SQUARE_SIZE) + self.LEFT_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
