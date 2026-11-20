@@ -6,8 +6,10 @@ class GameGUI:
     # GUI Dimensions
     SQUARE_SIZE = 50
     PIECE_SQUARE_RATIO = 0.9
+    MOVEMENT_DOT_RATIO = 0.3
     MARGIN = 10
     PIECE_IMAGE_SIZE = int(SQUARE_SIZE * PIECE_SQUARE_RATIO)
+    MOVEMENT_DOT_IMAGE_SIZE = int(SQUARE_SIZE * MOVEMENT_DOT_RATIO)
     BOARD_IMAGE_SIZE = 705
     TOP_PANEL_HEIGHT = 140
     BOTTOM_PANEL_HEIGHT = 30
@@ -61,6 +63,24 @@ class GameGUI:
         self.decorative_line = pygame.Surface(((self.hnefatafl_banner.get_width() - 10), 2))
         self.decorative_line.fill((212, 168, 68))
 
+        # SELECTED SQUARE HIGHLIGHT AND POSSIBLE MOVE DOTS
+        self.select_square_highlight = pygame.Surface((self.SQUARE_SIZE, self.SQUARE_SIZE))
+        self.select_square_highlight.fill((107, 131, 196))
+
+        self.possible_move_dot = pygame.transform.smoothscale(
+            pygame.image.load("graphicsArtifacts/blue-movement-dot.png").convert_alpha(),
+            (self.PIECE_IMAGE_SIZE, self.PIECE_IMAGE_SIZE)
+        )
+
+        
+
+        #MOVE ERRORS SURFACES
+
+
+        #GAME OVER TEXT SURFACES
+
+        #GAME INSTRUCTION SURFACE
+
 
         # RELEVANT BOARD ENGINE RELATED VARIABLES
         self.game_engine = Board()
@@ -96,6 +116,9 @@ class GameGUI:
         self.canvas.blit(self.decorative_line, ((self.WIDTH - self.decorative_line.get_width()) // 2,
             self.MARGIN + self.hnefatafl_banner_shadow.get_height() + self.defense_turn_display.get_height() + 4))
 
+        #draw selected square highlight and its possible moves
+        self._draw_selected_piece_possible_moves()
+
         # Render Pieces on Board
         self._draw_pieces_on_board()
 
@@ -110,6 +133,7 @@ class GameGUI:
                 self.canvas.blit(self.offense_turn_display, (
                     (self.WIDTH - self.offense_turn_display.get_width()) // 2,
                     self.MARGIN + self.hnefatafl_banner_shadow.get_height()))
+                
     def _draw_pieces_on_board(self):
         for row in range(0, 11):
             for column in range(0, 11):
@@ -123,6 +147,18 @@ class GameGUI:
                         self.canvas.blit(self.king_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
                     case ("offense", "standard"):
                         self.canvas.blit(self.offense_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
+    
+    def _draw_selected_piece_possible_moves(self):
+        if self.square_selected is not None:
+            self.canvas.blit(self.select_square_highlight, 
+                             (self.LEFT_GRID_OFFSET + (self.square_selected[1] * self.SQUARE_SIZE - 1), 
+                              (self.TOP_GRID_OFFSET + self.square_selected[0] * self.SQUARE_SIZE - 1)))
+
+    def _draw_game_over_pop_up(self):
+        pass
+
+    def _reset_game(self):
+        pass
 
                 
 
@@ -149,7 +185,9 @@ class GameGUI:
         x -= self.LEFT_GRID_OFFSET
         y -= self.TOP_GRID_OFFSET
 
-        if 0 <= x < (self.SQUARE_SIZE * 11) and 0 <= y < (self.SQUARE_SIZE * 11):
+        if (0 <= x < (self.SQUARE_SIZE * 11) 
+            and 0 <= y < (self.SQUARE_SIZE * 11) 
+            and self.game_engine.get_game_over()[0] == False):
             self._handle_board_grid_click((x, y))
 
 
