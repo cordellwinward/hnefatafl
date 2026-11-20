@@ -1,4 +1,5 @@
 from hnefatafl import Board
+from guiError import GUIError
 import pygame
 import pygame_gui
 
@@ -50,6 +51,7 @@ class GameGUI:
         # CREATE FONT OBJECTS
         self.title_font = pygame.font.Font("graphicsArtifacts/fonts/celtica/Celtica-Bold.ttf", size=70)
         self.day_roman_20pt = pygame.font.Font("graphicsArtifacts/fonts/DayRoman/DAYROM__.ttf")
+        self.day_roman_16pt = pygame.font.Font("graphicsArtifacts/fonts/DayRoman/DAYROM__.ttf", size=16)
 
         # TITLE BANNER
         self.hnefatafl_banner = self.title_font.render("hnefatafl", True, (225, 45, 75))
@@ -69,13 +71,21 @@ class GameGUI:
 
         self.possible_move_dot = pygame.transform.smoothscale(
             pygame.image.load("graphicsArtifacts/blue-movement-dot.png").convert_alpha(),
-            (self.PIECE_IMAGE_SIZE, self.PIECE_IMAGE_SIZE)
+            (self.MOVEMENT_DOT_IMAGE_SIZE, self.MOVEMENT_DOT_IMAGE_SIZE)
         )
 
         
 
-        #MOVE ERRORS SURFACES
-
+        #MOVE ERRORS SURFACES AND FLAGS
+        self.errors = {
+            "unexpected" : GUIError("An unexpected error occurred. Please Move Again.", self.day_roman_16pt),
+            "no_piece_on_square" : GUIError(
+            "You do not have a piece on that square. Please select a square with your piece.", self.day_roman_16pt),
+            "piece_no_valid_moves" : 
+            GUIError("That piece has no valid moves. Please select a different piece.", self.day_roman_16pt),
+            "invalid_move" : 
+            GUIError("That piece cannot move to that square. Please make a different move.", self.day_roman_16pt)
+        }
 
         #GAME OVER TEXT SURFACES
 
@@ -86,7 +96,8 @@ class GameGUI:
         self.game_engine = Board()
         self.square_selected = None
         self.square_selected_valid_moves = []
-        
+
+
 
     def draw_window(self) -> None:
         self.window.fill((30, 18, 20))
@@ -117,10 +128,14 @@ class GameGUI:
             self.MARGIN + self.hnefatafl_banner_shadow.get_height() + self.defense_turn_display.get_height() + 4))
 
         #draw selected square highlight and its possible moves
-        self._draw_selected_piece_possible_moves()
+        self._draw_highlight_selected_square()
+        self._draw_possible_move_dots()
 
         # Render Pieces on Board
         self._draw_pieces_on_board()
+
+        # Render Errors
+        self._draw_errors()
 
     def _draw_turn_text(self):
         turn = self.game_engine.get_board_turn()
@@ -148,11 +163,26 @@ class GameGUI:
                     case ("offense", "standard"):
                         self.canvas.blit(self.offense_piece_image, (self._convert_piece_image_grid_to_pixels((row, column))))
     
-    def _draw_selected_piece_possible_moves(self):
+    def _draw_highlight_selected_square(self):
         if self.square_selected is not None:
             self.canvas.blit(self.select_square_highlight, 
                              (self.LEFT_GRID_OFFSET + (self.square_selected[1] * self.SQUARE_SIZE - 1), 
                               (self.TOP_GRID_OFFSET + self.square_selected[0] * self.SQUARE_SIZE - 1)))
+
+    def _draw_possible_move_dots(self):
+        if self.square_selected is not None:
+            for square in self.square_selected_valid_moves:
+                self.canvas.blit(self.possible_move_dot,
+                                 self._convert_piece_image_grid_to_pixels(square, ratio=self.MOVEMENT_DOT_RATIO))
+    def _draw_errors(self):
+        for error in self.errors.values():
+            if error.get_active() == True:
+                self.canvas.blit(error.get_error_surface(), 
+                                (self.MARGIN + ((self.WIDTH - error.get_error_surface().get_width()) // 2),
+                                self.MARGIN + self.TOP_PANEL_HEIGHT + self.BOARD_IMAGE_SIZE + self.MARGIN))
+    def _reset_errors(self):
+        for error in self.errors.values():
+            error.set_active(False)
 
     def _draw_game_over_pop_up(self):
         pass
@@ -163,10 +193,10 @@ class GameGUI:
                 
 
 
-    def _convert_piece_image_grid_to_pixels(self, square: tuple[int, int]) -> tuple[int, int]:
+    def _convert_piece_image_grid_to_pixels(self, square: tuple[int, int], ratio: float = PIECE_SQUARE_RATIO) -> tuple[int, int]:
         y, x = square
-        x = int((x * self.SQUARE_SIZE) + self.LEFT_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
-        y = int((y * self.SQUARE_SIZE) + self.TOP_GRID_OFFSET + (((1 - self.PIECE_SQUARE_RATIO)/2) * self.SQUARE_SIZE))
+        x = int((x * self.SQUARE_SIZE) + self.LEFT_GRID_OFFSET + (((1 - ratio)/2) * self.SQUARE_SIZE))
+        y = int((y * self.SQUARE_SIZE) + self.TOP_GRID_OFFSET + (((1 - ratio)/2) * self.SQUARE_SIZE))
         return (x, y)
 
 
@@ -199,6 +229,7 @@ class GameGUI:
         column, row = board_pixel_coordinate
         row = row // self.SQUARE_SIZE
         column = column // self.SQUARE_SIZE
+        self._reset_errors()
         if (0 <= row <= 10) and (0 <= column <= 10):
             board_coordinate = (row, column)
             if self.square_selected == board_coordinate:
@@ -210,16 +241,16 @@ class GameGUI:
                 self._make_move(board_coordinate)
         else:
             #Add error case: something happened so your passing a board coordinate out of range
-            pass
+            self.errors["unexpected"].set_active(True)
 
     def _select_square(self, board_coordinate: tuple[int, int]) -> None:
         valid_moves = self.game_engine.select_board_square(board_coordinate)
         if valid_moves == None:
             #Add error case: Not your piece selected
-            pass
+            self.errors["no_piece_on_square"].set_active(True)
         elif valid_moves == []:
             #Add error case: This piece has no valid moves
-            pass
+            self.errors["piece_no_valid_moves"].set_active(True)
         elif len(valid_moves) >= 1:
             self.square_selected_valid_moves = valid_moves
             self.square_selected = board_coordinate
@@ -232,7 +263,7 @@ class GameGUI:
             self.square_selected_valid_moves = []
         else:
             # Handle error case: this piece can't move here.
-            pass
+            self.errors["invalid_move"].set_active(True)
 
     def get_program_active(self) -> bool:
         return self.running
