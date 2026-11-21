@@ -5,6 +5,8 @@ class Piece:
     VALID_TYPES = ["standard", "king"]
     
 
+    # Piece validation and display.
+
     def __init__(self, team: str, piece_type: str = "standard") -> None:
         """Creates a piece for the specified team and piece type."""
         self.team = team
@@ -45,6 +47,8 @@ class Board:
     BOARD_MAX_INDEX = 10 # For an 11x11 board including index 0
     
     
+    # Board setup and display.
+
     def __init__(self) -> None:
         """Creates a board in the initial Hnefatafl position."""
         self.turn: str = "offense"
@@ -99,6 +103,8 @@ class Board:
             row_counter += 1
         return board
     
+    # Coordinate conversion.
+
     def translate_text_into_coordinate(self, coordinate_str: str) -> tuple[int, int]:
         """Converts a board coordinate such as 'A1' into a row-column tuple."""
         if len(coordinate_str.strip()) < 2:
@@ -125,6 +131,8 @@ class Board:
         return f"{column}{row}".upper()
 
     
+    # Move selection and validation.
+
     def select_board_square(self, coordinate: tuple[int, int]) -> list[tuple[int, int]] | None:
         """Returns the valid moves for the current team's piece at a square."""
         board_square = self.board_state[coordinate[self.BOARD_SQUARE_ROW_INX]][coordinate[self.BOARD_SQUARE_COLUMN_INX]]
@@ -169,6 +177,8 @@ class Board:
         return valid_moves
         
 
+
+    # Move execution and captures.
 
     def move_piece(self, move_from: tuple[int, int], move_to: tuple[int, int]) -> None:
         """Moves a piece, updates board history, resolves captures, checks for game-ending conditions, and switches turns."""
@@ -272,6 +282,8 @@ class Board:
         
 
         
+    # Game-ending and draw conditions.
+
     def _check_for_game_end_conditions(
         self,
         moved_to_square: tuple[int, int],
@@ -317,6 +329,8 @@ class Board:
                     if square_piece is not None:
                         return True
                 return False
+
+    # Team queries and encirclement checks.
 
     def find_all_pieces_of_team(self, team: str) -> list[tuple[int, int]]:
         """Returns the board coordinates of every piece on a team."""
@@ -393,6 +407,8 @@ class Board:
         else:
             return False
 
+
+    # Legal-move queries and public board state accessors.
 
     def _check_for_possible_moves(self) -> bool:
         """Checks whether the next team has any legal moves."""

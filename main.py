@@ -2,6 +2,10 @@ import pygame
 import pygame_gui
 import pygbag
 from gui import GameGUI
+
+
+# Application entry point.
+
 def main():
     gameGUI = GameGUI()
     clock = pygame.time.Clock()

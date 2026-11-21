@@ -2,7 +2,10 @@ import pytest
 from hnefatafl import Board, Piece
 
 
+# Piece tests.
+
 def test_piece_init():
+    """Verify valid piece types and teams initialize correctly."""
     offense = Piece("offense", "standard")
     assert offense.piece_type == "standard"
     assert offense.team == "offense"
@@ -28,6 +31,7 @@ def test_piece_init():
 
 
 def test_piece_str():
+    """Verify that pieces display their expected board characters."""
     offense = Piece("offense")
     defense = Piece("defense")
     king = Piece("defense", piece_type="king")
@@ -36,10 +40,10 @@ def test_piece_str():
     assert str(offense) == "A"
     assert str(defense) == "D"
     assert str(king) == "K"
-    
-    
+# Board setup and display tests.
 
 def test_board_init():
+    """Verify the initial board dimensions, pieces, and game state."""
     board = Board()
     
     # 1. Test Matrix Dimensions
@@ -59,6 +63,7 @@ def test_board_init():
     assert board.turn == "offense"
 
 def test_board_str():
+    """Verify that the board renders in the expected text format."""
     board = Board()
     
     expected_output = (
@@ -78,6 +83,7 @@ def test_board_str():
     assert str(board) == expected_output
 
 def test_translate_text_into_coordinate():
+    """Verify text board coordinates convert to row-column tuples."""
     board = Board()
     assert board.translate_text_into_coordinate("A4") == (3, 0)
     assert board.translate_text_into_coordinate("K11") == (10, 10)
@@ -95,6 +101,7 @@ def test_translate_text_into_coordinate():
         board.translate_text_into_coordinate("A1C")
 
 def test_translate_coordinate_into_text():
+    """Verify row-column tuples convert to text board coordinates."""
     board = Board()
     assert board.translate_coordinate_into_text((3, 0)) == "A4"
     assert board.translate_coordinate_into_text((10, 10)) == "K11"
@@ -109,7 +116,11 @@ def test_translate_coordinate_into_text():
     with pytest.raises(ValueError):
         board.translate_coordinate_into_text((0, 11))
 
+
+# Move selection and validation tests.
+
 def test_select_board_square():
+    """Verify selection returns valid moves for the active team."""
     board = Board()
     assert board.select_board_square((0, 3)) == [(0, 2), (0, 1), (1, 3), (2, 3), (3, 3), (4, 3)]
     assert board.select_board_square((3, 0)) == [(3, 1), (3, 2), (3, 3), (3, 4), (2, 0), (1, 0)]
@@ -123,6 +134,7 @@ def test_select_board_square():
 
 
 def test_find_possible_paths_stops_at_pieces():
+    """Verify movement paths stop before occupied squares and edges."""
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
     board.board_state[5][5] = Piece("offense")
@@ -140,6 +152,7 @@ def test_find_possible_paths_stops_at_pieces():
 
 
 def test_find_valid_moves_for_standard_piece():
+    """Verify standard pieces cannot move onto special board squares."""
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
 
@@ -156,6 +169,7 @@ def test_find_valid_moves_for_standard_piece():
 
 
 def test_find_valid_moves_for_king_includes_special_squares():
+    """Verify the king can move onto throne and corner squares."""
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
 
@@ -167,6 +181,7 @@ def test_find_valid_moves_for_king_includes_special_squares():
 
 
 def test_move_piece():
+    """Verify valid moves update pieces, turns, and board history."""
 
     board = Board()
     board.move_piece((0, 3), (0, 1))
@@ -187,6 +202,7 @@ def test_move_piece():
 
 
 def test_move_piece_rejects_invalid_moves():
+    """Verify invalid moves raise descriptive value errors."""
     board = Board()
 
     with pytest.raises(ValueError, match="move_from is outside the board"):
@@ -209,6 +225,7 @@ def test_move_piece_rejects_invalid_moves():
 
 
 def test_move_piece_integration():
+    """Verify moving a piece triggers capture and game-state handling."""
     # Verify that move_piece() triggers capture handling.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -310,7 +327,10 @@ def test_move_piece_integration():
     assert board.victor == "offense"
 
 
+# Draw and capture tests.
+
 def test_check_for_50_turns_without_capture_increments_without_capture():
+    """Verify a non-capturing turn increments the draw counter."""
     board = Board()
 
     assert board.turns_without_capture == 0
@@ -319,6 +339,7 @@ def test_check_for_50_turns_without_capture_increments_without_capture():
 
 
 def test_check_for_50_turns_without_capture_resets_after_capture():
+    """Verify a capture resets the non-capture turn counter."""
     board = Board()
     board.turns_without_capture = 25
 
@@ -327,6 +348,7 @@ def test_check_for_50_turns_without_capture_resets_after_capture():
 
 
 def test_check_for_50_turns_without_capture_returns_true_at_100_moves():
+    """Verify the draw condition occurs after 100 non-capturing turns."""
     board = Board()
 
     for _ in range(99):
@@ -338,6 +360,7 @@ def test_check_for_50_turns_without_capture_returns_true_at_100_moves():
 
 
 def test_check_for_capture_corners():
+    """Verify pieces are captured correctly beside board corners."""
     #Corner Captures
     board = Board()
 
@@ -376,6 +399,7 @@ def test_check_for_capture_corners():
     assert board.board_state[10][9] is None
 
 def test_check_for_capture_edges():
+    """Verify edge captures work without wrapping around the board."""
     # Board Edges & Boundary Safety (Indices 0, 10, 1, and 9)
     board = Board()
 
@@ -416,6 +440,7 @@ def test_check_for_capture_edges():
     assert board.board_state[5][10].team == "defense"
 
 def test_check_for_capture_throne():
+    """Verify the throne affects capture rules for attackers and defenders."""
     #Throne Hostility
     board = Board()    
 
@@ -447,6 +472,7 @@ def test_check_for_capture_throne():
     assert board.board_state[5][6] is None
 
 def test_check_for_capture_special():
+    """Verify king, multiple, friendly, and hostile capture cases."""
     #King not captured by 2 pieces
     board = Board()
 
@@ -493,6 +519,7 @@ def test_check_for_capture_special():
     assert board.board_state[7][3].team == "defense"
 
 def test_capture_king():
+    """Verify king capture ends the game only when fully surrounded."""
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
     board.turn = "offense"
@@ -540,7 +567,10 @@ def test_capture_king():
     assert board.victor == ""
 
 
+# Game-ending condition tests.
+
 def test_check_for_game_end_conditions():
+    """Verify game endings for immobilization, encirclement, and victory."""
     # No possible moves: the team that just moved wins.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -587,6 +617,7 @@ def test_check_for_game_end_conditions():
 
 
 def test_check_for_king_in_corner():
+    """Verify only a defensive king in a corner triggers a win."""
     board = Board()
 
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -615,7 +646,10 @@ def test_check_for_king_in_corner():
     board.board_state[10][10] = Piece("defense", piece_type="king")
     assert board._check_for_king_in_corner() is False
 
+# Team, encirclement, and legal-move query tests.
+
 def test_find_all_pieces_of_team():
+    """Verify all piece coordinates are returned for each team."""
     board = Board()
 
     assert board.find_all_pieces_of_team("defense") == [
@@ -640,6 +674,7 @@ def test_find_all_pieces_of_team():
 
 
 def test_check_for_encircled_defenders():
+    """Verify defender encirclement detection and edge escape behavior."""
     # Completely enclosed defenders are encircled.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -686,6 +721,7 @@ def test_check_for_encircled_defenders():
 
 
 def test_run_algorithm_for_encircled_defenders():
+    """Verify the full algorithm identifies enclosed defenders."""
     # A defender on the edge is not encircled.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -721,6 +757,7 @@ def test_run_algorithm_for_encircled_defenders():
 
 
 def test_check_for_2_pieces_of_team_next_to_square():
+    """Verify adjacent team-piece detection works near board edges."""
     # Two matching adjacent pieces return True.
     board = Board()
     board.board_state = [[None] * 11 for _ in range(11)]
@@ -753,6 +790,7 @@ def test_check_for_2_pieces_of_team_next_to_square():
 
 
 def test_check_for_possible_moves():
+    """Verify whether the active team has at least one legal move."""
     # With offense's turn active, this checks whether defense has a move.
     board = Board()
     assert board._check_for_possible_moves() is True
@@ -776,6 +814,7 @@ def test_check_for_possible_moves():
 
 
 def test_get_board_square_value():
+    """Verify board-square values identify empty squares and piece types."""
     board = Board()
 
     assert board.get_board_square_value((0, 0)) is None
@@ -784,6 +823,7 @@ def test_get_board_square_value():
 
 
 def test_get_game_over():
+    """Verify game-over status and winner values are reported correctly."""
     board = Board()
 
     assert board.get_game_over() == (False, None)
